@@ -18,5 +18,8 @@ namespace BEAPI.Entities
         public Guid ProductId { get; set; }
         public required Product Product { get; set; }
 
+        public Guid ElderId { get; set; }
+        public required User Elder { get; set; }
+
     }
 }

@@ -15,6 +15,7 @@ namespace BEAPI.Extension
             services.AddScoped<IValueService, ValueService>();
             services.AddScoped<IListOfValueService, ListOfValueService>();
             services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<ICartService, CartService>();
         }
     }
 }

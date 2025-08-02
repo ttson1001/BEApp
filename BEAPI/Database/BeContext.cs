@@ -17,6 +17,7 @@ namespace BEAPI.Database
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<ProductVariant> ProductVariants { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
         public DbSet<ProductVariantValue> ProductVariantValues { get; set; }
 
         public BeContext(DbContextOptions<BeContext> options) : base(options) { }
@@ -25,7 +26,7 @@ namespace BEAPI.Database
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Cart>()
+            modelBuilder.Entity<CartItem>()
                 .HasOne(c => c.Elder)
                 .WithMany()
                 .HasForeignKey(c => c.ElderId)
