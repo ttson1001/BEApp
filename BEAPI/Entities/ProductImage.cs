@@ -4,6 +4,6 @@
     {
         public string URL { get; set; }
         public Guid ProductId { get; set; }
-        public string Product { get; set; }
+        public Product Product { get; set; }
     }
 }
