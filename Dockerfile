@@ -7,7 +7,7 @@ COPY BEAPI.sln ./
 COPY BEAPI/BEAPI.csproj BEAPI/
 RUN dotnet restore BEAPI/BEAPI.csproj
 
-# Copy the rest of the source code
+# Copy all source code
 COPY . .
 WORKDIR /src/BEAPI
 
@@ -15,11 +15,10 @@ WORKDIR /src/BEAPI
 RUN dotnet publish -c Release -o /app/publish
 
 # Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Expose ports
 EXPOSE 80
 EXPOSE 443
 
