@@ -5,6 +5,6 @@ namespace BEAPI.Services.IServices
 {
     public interface ICartService
     {
-        Task ReplaceCartAsync(CartUpdateDto dto);
+        Task ReplaceCartAsync(CartReplaceAllDto dto);
     }
 }

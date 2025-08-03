@@ -7,6 +7,7 @@ namespace BEAPI.Entities
     {
         public Guid CustomerId { get; set; }
         public User Customer { get; set; } = null!;
-        public ICollection<CartItem> Items { get; set; } = new List<CartItem>();
+        public CartStatus Status { get; set; }
+        public List<CartItem> Items { get; set; } = new List<CartItem>();
     }
 }

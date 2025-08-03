@@ -25,7 +25,8 @@ namespace BEAPI.Entities
         public DateTimeOffset? BirthDate { get; set; }
         public string? PhoneNumber { get; set; }
         public string? PasswordHash { get; set; }
-        public Guid? Guardian { get; set; }
+        public Guid? GuardianId { get; set; }
+        public User? Guardian { get; set; }
         public Guid? RoleId { get; set; }
         public Role Role { get; set; }
         public virtual List<Address> Addresses { get; set; } = new List<Address>();

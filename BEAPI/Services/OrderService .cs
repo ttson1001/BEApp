@@ -12,53 +12,54 @@ namespace BEAPI.Services
     public class OrderService : IOrderService
     {
         private readonly IRepository<Order> _orderRepo;
-        private readonly IRepository<Product> _productRepo;
+        private readonly IRepository<ProductVariant> _productVariantRepo;
         private readonly IRepository<User> _userRepo;
-        private readonly IMapper _mapper;
+        private readonly IRepository<Cart> _cartRepo;
 
         public OrderService(IRepository<Order> orderRepo,
-                            IRepository<Product> productRepo,
+                            IRepository<ProductVariant> productVariantRepo,
                             IRepository<User> userRepo,
-                            IMapper mapper)
+                            IRepository<Cart> cartRepo)
         {
             _orderRepo = orderRepo;
-            _productRepo = productRepo;
+            _productVariantRepo = productVariantRepo;
             _userRepo = userRepo;
-            _mapper = mapper;
+            _cartRepo = cartRepo;
         }
 
-        public async Task CreateAsync(OrderCreateDto dto)
+        public async Task CreateElderOrderAsync(OrderCreateDto dto)
         {
-            var customerId = GuidHelper.ParseOrThrow(dto.CustomerId, nameof(dto.CustomerId));
+            var CartId = GuidHelper.ParseOrThrow(dto.CartId, nameof(dto.CartId));
+            if (!await _cartRepo.Get().AnyAsync(u => u.Id == CartId))
+                throw new Exception("Cart not found");
+            var cart = _cartRepo.Get().Include(x => x.Items)
+                .ThenInclude(x => x.ProductVariant)
+                .ThenInclude(x => x.Product).First(u => u.Id == CartId && u.Status == CartStatus.Pending);
 
-            if (!await _userRepo.Get().AnyAsync(u => u.Id == customerId))
-                throw new Exception("Customer not found");
-
-            if (dto.OrderDetails == null || !dto.OrderDetails.Any())
-                throw new Exception("Order must have at least one OrderDetail");
-
-            var productIds = dto.OrderDetails
-                .Select(d => GuidHelper.ParseOrThrow(d.ProductId, nameof(d.ProductId)))
-                .ToList();
-
-            var elderIds = dto.OrderDetails
-                .Select(d => GuidHelper.ParseOrThrow(d.ElderId, nameof(d.ElderId)))
-                .ToList();
-
-            var invalidProducts = await ValidationHelper.ValidateIdsExistAsync(_productRepo, productIds);
-            if (invalidProducts.Any())
-                throw new Exception($"Invalid ProductIds: {string.Join(", ", invalidProducts)}");
-
-            var invalidElders = await ValidationHelper.ValidateIdsExistAsync(_userRepo, elderIds);
-            if (invalidElders.Any())
-                throw new Exception($"Invalid ElderIds: {string.Join(", ", invalidElders)}");
-
-            var order = _mapper.Map<Order>(dto);
-            order.OrderStatus = OrderStatus.Paid;
-
+            var price = cart.Items.Sum(x => x.ProductPrice);
+            
+            var elder = await _userRepo.Get().Include(x => x.Guardian).FirstAsync(x => x.Id == cart.CustomerId);
+           
+            var order = new Order
+            {
+                Customer = elder.Guardian,
+                ElderId = elder.Id,
+                Note = dto.Note,
+                OrderStatus = OrderStatus.Created,
+                TotalPrice = price,
+            };
+            List<OrderDetail> orderDetails = new List<OrderDetail>();
+            orderDetails.AddRange(cart.Items.Select(x => new OrderDetail
+            {
+                Order = order,
+                ProductVariant = x.ProductVariant,
+                Price = x.ProductPrice,
+                Quantity = x.Quantity,
+                ProductName = x.ProductVariant.Product.Name ?? "",
+            }));
+            cart.Status = CartStatus.Approve;
             await _orderRepo.AddAsync(order);
             await _orderRepo.SaveChangesAsync();
         }
-
     }
 }

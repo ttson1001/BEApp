@@ -12,8 +12,7 @@
         public int? Width { get; set; }
         public DateTimeOffset? ManufactureDate { get; set; }
         public DateTimeOffset? ExpirationDate { get; set; }
-        public string ProductTypeId { get; set; } = string.Empty;
-
+        public List<string> ValueCategoryIds { get; set; } = new();
         public List<ProductImageCreateDto> ProductImages { get; set; } = new();
         public List<ProductVariantCreateDto> ProductVariants { get; set; } = new();
     }

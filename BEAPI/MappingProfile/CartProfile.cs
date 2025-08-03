@@ -8,9 +8,8 @@ namespace BEAPI.MappingProfile
     {
         public CartProfile()
         {
-            CreateMap<CartItemCreateDto, CartItem>()
-                .ForMember(d => d.ProductId, o => o.MapFrom(s => Guid.Parse(s.ProductId)))
-                .ForMember(d => d.ElderId, o => o.MapFrom(s => Guid.Parse(s.ElderId)))
+            CreateMap<CartItemReplaceAllDto, CartItem>()
+                .ForMember(d => d.ProductVariantId, o => o.MapFrom(s => Guid.Parse(s.ProductVariantId)))
                 .ForMember(d => d.Quantity, o => o.MapFrom(s => s.Quantity));
         }
 

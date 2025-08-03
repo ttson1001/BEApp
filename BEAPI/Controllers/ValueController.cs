@@ -3,6 +3,7 @@ using BEAPI.Dtos.Common;
 using BEAPI.Dtos.ListOfValue;
 using BEAPI.Dtos.Value;
 using BEAPI.Exceptions;
+using BEAPI.Helper;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -206,6 +207,21 @@ namespace BEAPI.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
+        [HttpGet("{id}/[action]")]
+        public async Task<IActionResult> GetValueWithChildren(string id)
+        {
+            try
+            {
+                var guidId = GuidHelper.ParseOrThrow(id, nameof(id));
+                var result = await _valueService.GetValueWithChildrenAsync(guidId);
+                return Ok(new { message = "Success", data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
 

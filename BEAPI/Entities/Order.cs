@@ -8,6 +8,9 @@ namespace BEAPI.Entities
     {
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalPrice { get; set; }
+        public string? Note { get; set; }
+        public Guid ElderId { get; set; }
+        public User? Elder { get; set; }
         public OrderStatus OrderStatus { get; set; }
         public Guid CustomerId { get; set; }
         public required User Customer { get; set; }

@@ -103,5 +103,30 @@ namespace BEAPI.Services
 
             return _mapper.Map<List<ValueDto>>(values);
         }
+
+        public async Task<ValueTreeDto> GetValueWithChildrenAsync(Guid valueId)
+        {
+            var value = await _valueRepo.Get()
+                .Include(v => v.ChildListOfValue)
+                    .ThenInclude(clv => clv.Values)
+                .FirstOrDefaultAsync(v => v.Id == valueId)
+                ?? throw new Exception("Value not found");
+
+            return BuildValueTreeRecursive(value);
+        }
+
+        private ValueTreeDto BuildValueTreeRecursive(Value value)
+        {
+            return new ValueTreeDto
+            {
+                Id = value.Id.ToString(),
+                Label = value.Label,
+                Code = value.Code,
+                Description = value.Description,
+                Children = value.ChildListOfValue != null
+                    ? value.ChildListOfValue.Values.Select(BuildValueTreeRecursive).ToList()
+                    : new List<ValueTreeDto>()
+            };
+        }
     }
 }

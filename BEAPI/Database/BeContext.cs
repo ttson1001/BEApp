@@ -25,11 +25,22 @@ namespace BEAPI.Database
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            modelBuilder.Entity<CartItem>()
-                .HasOne(c => c.Elder)
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Elder)
                 .WithMany()
-                .HasForeignKey(c => c.ElderId)
+                .HasForeignKey(o => o.ElderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Value>()
+                .HasOne(v => v.ListOfValue)
+                .WithMany(l => l.Values)
+                .HasForeignKey(v => v.ListOfValueId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Value>()
+                .HasOne(v => v.ChildListOfValue)
+                .WithMany()
+                .HasForeignKey(v => v.ChildListOfValueId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Cart>()

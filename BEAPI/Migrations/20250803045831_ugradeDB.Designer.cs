@@ -4,6 +4,7 @@ using BEAPI.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BEAPI.Migrations
 {
     [DbContext(typeof(BeContext))]
-    partial class BeContextModelSnapshot : ModelSnapshot
+    [Migration("20250803045831_ugradeDB")]
+    partial class ugradeDB
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -442,7 +445,7 @@ namespace BEAPI.Migrations
                     b.Property<DateTimeOffset?>("DeletionDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("Descriotion")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("ExpirationDate")
@@ -469,6 +472,9 @@ namespace BEAPI.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("ProductTypeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -486,53 +492,6 @@ namespace BEAPI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Products");
-                });
-
-            modelBuilder.Entity("BEAPI.Entities.ProductCategoryValue", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CreatedById")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("CreationDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("DeleteById")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("DeletionDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid?>("ModificationById")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("ModificationDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<Guid>("ValueId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("ValueId");
-
-                    b.ToTable("ProductCategoryValue");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.ProductImage", b =>
@@ -850,9 +809,6 @@ namespace BEAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ChildListOfValueId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -895,8 +851,6 @@ namespace BEAPI.Migrations
                         .HasColumnType("rowversion");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ChildListOfValueId");
 
                     b.HasIndex("ListOfValueId");
 
@@ -1017,25 +971,6 @@ namespace BEAPI.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BEAPI.Entities.ProductCategoryValue", b =>
-                {
-                    b.HasOne("BEAPI.Entities.Product", "Product")
-                        .WithMany("ProductCategoryValues")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BEAPI.Entities.Value", "Value")
-                        .WithMany("ProductCategories")
-                        .HasForeignKey("ValueId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Value");
-                });
-
             modelBuilder.Entity("BEAPI.Entities.ProductImage", b =>
                 {
                     b.HasOne("BEAPI.Entities.Product", "Product")
@@ -1094,18 +1029,11 @@ namespace BEAPI.Migrations
 
             modelBuilder.Entity("BEAPI.Entities.Value", b =>
                 {
-                    b.HasOne("BEAPI.Entities.ListOfValue", "ChildListOfValue")
-                        .WithMany()
-                        .HasForeignKey("ChildListOfValueId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("BEAPI.Entities.ListOfValue", "ListOfValue")
                         .WithMany("Values")
                         .HasForeignKey("ListOfValueId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ChildListOfValue");
 
                     b.Navigation("ListOfValue");
                 });
@@ -1127,8 +1055,6 @@ namespace BEAPI.Migrations
 
             modelBuilder.Entity("BEAPI.Entities.Product", b =>
                 {
-                    b.Navigation("ProductCategoryValues");
-
                     b.Navigation("ProductImages");
 
                     b.Navigation("ProductVariants");
@@ -1155,8 +1081,6 @@ namespace BEAPI.Migrations
 
             modelBuilder.Entity("BEAPI.Entities.Value", b =>
                 {
-                    b.Navigation("ProductCategories");
-
                     b.Navigation("productVariantValues");
                 });
 #pragma warning restore 612, 618

@@ -1,6 +1,5 @@
 ﻿using BEAPI.Dtos.Cart;
 using BEAPI.Dtos.Common;
-using BEAPI.Services;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,8 +16,8 @@ namespace BEAPI.Controllers
             _service = service;
         }
 
-        [HttpPost("replace")]
-        public async Task<IActionResult> ReplaceCart([FromBody] CartUpdateDto dto)
+        [HttpPost("[action]")]
+        public async Task<IActionResult> ReplaceAllCart([FromBody] CartReplaceAllDto dto)
         {
             try
             {
@@ -38,6 +37,5 @@ namespace BEAPI.Controllers
                 });
             }
         }
-
     }
 }

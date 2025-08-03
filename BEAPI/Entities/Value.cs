@@ -7,6 +7,9 @@
         public string Label { get; set; } = string.Empty;
         public Guid ListOfValueId { get; set; }
         public ListOfValue? ListOfValue { get; set; }
+        public Guid? ChildListOfValueId { get; set; }
+        public ListOfValue? ChildListOfValue { get; set; }
         public virtual List<ProductVariantValue> productVariantValues { get; set; } = new List<ProductVariantValue>();
+        public virtual List<ProductCategoryValue> ProductCategories { get; set; } = new List<ProductCategoryValue>();
     }
 }

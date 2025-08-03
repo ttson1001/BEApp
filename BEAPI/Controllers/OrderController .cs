@@ -17,11 +17,11 @@ namespace BEAPI.Controllers
         }
 
         [HttpPost("[action]")]
-        public async Task<IActionResult> Create([FromBody] OrderCreateDto dto)
+        public async Task<IActionResult> CreateElderOrderAsync([FromBody] OrderCreateDto dto)
         {
             try
             {
-                await _service.CreateAsync(dto);
+                await _service.CreateElderOrderAsync(dto);
                 return Ok(new ResponseDto
                 {
                     Message = "Order created successfully",

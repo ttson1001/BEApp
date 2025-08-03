@@ -1,8 +1,8 @@
 ﻿namespace BEAPI.Dtos.Cart
 {
-    public class CartUpdateDto
+    public class CartReplaceAllDto
     {
         public string CustomerId { get; set; } = string.Empty;
-        public List<CartItemCreateDto> Items { get; set; } = new();
+        public List<CartItemReplaceAllDto> Items { get; set; } = new();
     }
 }

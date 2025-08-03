@@ -37,7 +37,7 @@ namespace BEAPI.Services
 
             var user = _mapper.Map<User>(elderRegisterDto);
             user.Age = age;
-            user.Guardian = userId;
+            user.GuardianId = userId;
 
             await _userRepo.AddAsync(user);
             await _userRepo.SaveChangesAsync();

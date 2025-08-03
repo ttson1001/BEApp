@@ -8,12 +8,10 @@ namespace BEAPI.MappingProfile
     {
         public ProductProfile()
         {
-            CreateMap<ProductCreateDto, Product>()
-                .ForMember(d => d.ProductTypeId, o => o.MapFrom(s => Guid.Parse(s.ProductTypeId)));
+            CreateMap<ProductCreateDto, Product>();
 
             CreateMap<Product, ProductDto>()
-                .ForMember(d => d.Id, o => o.MapFrom(s => s.Id.ToString()))
-                .ForMember(d => d.ProductTypeId, o => o.MapFrom(s => s.ProductTypeId.ToString()));
+                .ForMember(d => d.Id, o => o.MapFrom(s => s.Id.ToString()));
 
             CreateMap<ProductImageCreateDto, ProductImage>();
 
