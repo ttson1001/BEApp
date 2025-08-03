@@ -84,10 +84,10 @@ builder.Services.Register();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
-
+app.UseCors("AllowAllOrigin");
 EnsureMigrate(app);
 
-if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
