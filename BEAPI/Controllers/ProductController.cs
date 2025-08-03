@@ -1,5 +1,6 @@
 ﻿using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Product;
+using BEAPI.Services;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -84,7 +85,28 @@ namespace BEAPI.Controllers
             }
         }
 
+        [HttpPost("[action]")]
+        public async Task<IActionResult> Search([FromBody] ProductSearchDto dto)
+        {
+            try
+            {
+                var result = await _service.SearchAsync(dto);
 
+                return Ok(new ResponseDto
+                {
+                    Message = "Lấy danh sách sản phẩm thành công",
+                    Data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Message = ex.Message,
+                    Data = null
+                });
+            }
+        }
     }
 
 }

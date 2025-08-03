@@ -24,49 +24,66 @@ namespace BEAPI.Services
             _mapper = mapper;
             _listOfValueRepo = listOfValueRepo;
         }
-        public async Task Create(ValueCreateDto valueCreateDto)
+        public async Task Create(ValueCreateDto dto)
         {
-            var exists = await _valueRepo
-                .Get().AnyAsync(x => x.Code == valueCreateDto.Code);
-            if (exists)
-                throw new Exception($"{nameof(Value)} with code '{valueCreateDto.Code}' already exists");
+            if (await _valueRepo.Get().AnyAsync(x => x.Code == dto.Code))
+                throw new Exception($"{nameof(Value)} with code '{dto.Code}' already exists");
 
-            var entity = _mapper.Map<Value>(valueCreateDto);
-            entity.ListOfValueId = Guid.Parse(valueCreateDto.ListOfValueId);
+            var listOfValueId = GuidHelper.ParseOrThrow(dto.ListOfValueId, nameof(dto.ListOfValueId));
 
-            var listId = GuidHelper.ParseOrThrow(valueCreateDto.ListOfValueId, nameof(valueCreateDto.ListOfValueId));
-            var listExists = await _listOfValueRepo.Get()
-                   .AnyAsync(x => x.Id == listId);
-            if (!listExists)
-                throw new Exception($"{nameof(ListOfValue)} not found");
+            if (!await _listOfValueRepo.Get().AnyAsync(x => x.Id == listOfValueId))
+                throw new Exception($"{nameof(ListOfValue)} with id '{listOfValueId}' not found");
+
+            Guid? childListOfValueId = null;
+            if (!string.IsNullOrWhiteSpace(dto.ChildListOfValueId))
+            {
+                childListOfValueId = GuidHelper.ParseOrThrow(dto.ChildListOfValueId, nameof(dto.ChildListOfValueId));
+
+                bool childExists = await _listOfValueRepo.Get().AnyAsync(x => x.Id == childListOfValueId);
+                if (!childExists)
+                    throw new Exception($"{nameof(ListOfValue)} with id '{childListOfValueId}' not found");
+            }
+
+            var entity = _mapper.Map<Value>(dto);
+            entity.ListOfValueId = listOfValueId;
+            entity.ChildListOfValueId = childListOfValueId;
+
             await _valueRepo.AddAsync(entity);
             await _valueRepo.SaveChangesAsync();
         }
 
-        public async Task Update(ValueUpdateDto valueUpdateDto)
+        public async Task Update(ValueUpdateDto dto)
         {
-            var id = GuidHelper.ParseOrThrow(valueUpdateDto.Id, nameof(valueUpdateDto.Id));
+            var id = GuidHelper.ParseOrThrow(dto.Id, nameof(dto.Id));
             var existing = await _valueRepo.Get()
-                .FirstOrDefaultAsync(x => x.Id == id) ?? throw new Exception($"{nameof(Value)} not found");
+                .FirstOrDefaultAsync(x => x.Id == id)
+                ?? throw new Exception($"{nameof(Value)} not found");
 
-            var duplicate = await _valueRepo.Get()
-                .AnyAsync(x => x.Code == valueUpdateDto.Code && x.Id != id);
-            if (duplicate)
-                throw new Exception($"{nameof(Value)} with code '{valueUpdateDto.Code}' already exists");
+            if (await _valueRepo.Get().AnyAsync(x => x.Code == dto.Code && x.Id != id))
+                throw new Exception($"{nameof(Value)} with code '{dto.Code}' already exists");
 
-            var listId = GuidHelper.ParseOrThrow(valueUpdateDto.ListOfValueId, nameof(valueUpdateDto.ListOfValueId));
+            var listOfValueId = GuidHelper.ParseOrThrow(dto.ListOfValueId, nameof(dto.ListOfValueId));
+            if (!await _listOfValueRepo.Get().AnyAsync(x => x.Id == listOfValueId))
+                throw new Exception($"{nameof(ListOfValue)} with id '{listOfValueId}' not found");
 
-            var listExists = await _valueRepo.Get()
-                .AnyAsync(x => x.Id == listId);
-            if (!listExists)
-                throw new Exception($"{nameof(ListOfValue)} not found");
+            Guid? childListOfValueId = null;
+            if (!string.IsNullOrWhiteSpace(dto.ChildListOfValueId))
+            {
+                childListOfValueId = GuidHelper.ParseOrThrow(dto.ChildListOfValueId, nameof(dto.ChildListOfValueId));
 
-            _mapper.Map(valueUpdateDto, existing);
-            existing.ListOfValueId = listId;
+                if (!await _listOfValueRepo.Get().AnyAsync(x => x.Id == childListOfValueId))
+                    throw new Exception($"{nameof(ListOfValue)} with id '{childListOfValueId}' not found");
+            }
+
+            _mapper.Map(dto, existing);
+
+            existing.ListOfValueId = listOfValueId;
+            existing.ChildListOfValueId = childListOfValueId;
 
             _valueRepo.Update(existing);
             await _valueRepo.SaveChangesAsync();
         }
+
 
         public async Task<List<ValueDto>> GetValuesByListIdAsync(string listOfValueId)
         {

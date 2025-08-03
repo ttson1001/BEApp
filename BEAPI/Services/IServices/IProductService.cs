@@ -1,4 +1,6 @@
-﻿using BEAPI.Dtos.Product;
+﻿using BEAPI.Controllers;
+using BEAPI.Dtos.Common;
+using BEAPI.Dtos.Product;
 
 namespace BEAPI.Services.IServices
 {
@@ -7,5 +9,6 @@ namespace BEAPI.Services.IServices
         Task Create(ProductCreateDto dto);
         Task<List<ProductDto>> GetAll();
         Task<ProductDto> GetById(string productId);
+        Task<PagedResult<ProductListDto>> SearchAsync(ProductSearchDto dto);
     }
 }

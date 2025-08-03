@@ -26,10 +26,12 @@ namespace BEAPI.MappingProfile
                    opt => opt.MapFrom(src => src.Id));
 
             CreateMap<ValueCreateDto, Value>()
-                .ForMember(dest => dest.ListOfValueId, opt => opt.Ignore());
+                .ForMember(dest => dest.ListOfValueId, opt => opt.Ignore())
+                .ForMember(dest => dest.ChildListOfValueId, opt => opt.Ignore());
 
             CreateMap<ValueUpdateDto, Value>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.Parse(src.Id)))
+                .ForMember(dest => dest.ChildListOfValueId, opt => opt.Ignore())
                 .ForMember(dest => dest.ListOfValueId, opt => opt.Ignore());
 
             CreateMap<Value, ValueDto>()

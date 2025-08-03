@@ -7,5 +7,6 @@
         public string? Description { get; set; }
         public string Label { get; set; } = string.Empty;
         public string ListOfValueId { get; set; } = string.Empty;
+        public string? ChildListOfValueId { get; set; }
     }
 }
