@@ -13,6 +13,17 @@ var builder = WebApplication.CreateBuilder(args);
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigin",
+    builder =>
+    {
+        builder.AllowAnyOrigin()
+    .AllowAnyHeader()
+    .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -76,7 +87,7 @@ var app = builder.Build();
 
 EnsureMigrate(app);
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
