@@ -23,6 +23,7 @@ namespace BEAPI.Extension
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IOtpService, OtpService>();
             services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<VNPayService>();
         }
     }
