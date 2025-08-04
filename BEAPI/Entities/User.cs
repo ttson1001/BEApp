@@ -10,7 +10,10 @@ namespace BEAPI.Entities
     {
         [MaxLength(255)]
         public string FullName { get; set; } = string.Empty;
-        public Guid? OTPId { get; set; }
+        public string? OtpCode { get; set; }
+        public DateTimeOffset? OtpExpiredAt { get; set; }
+        public bool IsOtpUsed { get; set; } = false;
+        public bool IsVerified { get; set; } = false;
         public string? RefreshToken { get; set; }
         [MaxLength(256)]
         public string? UserName { get; set; }

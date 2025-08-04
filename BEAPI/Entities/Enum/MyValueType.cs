@@ -1,6 +1,6 @@
 ﻿namespace BEAPI.Entities.Enum
 {
-    public enum ValueType
+    public enum MyValueType
     {
         Category,
         ProductProperty

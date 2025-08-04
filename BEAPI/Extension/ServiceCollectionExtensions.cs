@@ -1,4 +1,6 @@
-﻿using BEAPI.Repositories;
+﻿using BEAPI.Model;
+using BEAPI.PaymentService.VnPay;
+using BEAPI.Repositories;
 using BEAPI.Services;
 using BEAPI.Services.IServices;
 
@@ -18,6 +20,10 @@ namespace BEAPI.Extension
             services.AddScoped<ICartService, CartService>();
             services.AddHttpClient<ILocationService, LocationService>();
             services.AddScoped<IinternalLocationService, InternalLocationService>();
+            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IOtpService, OtpService>();
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<VNPayService>();
         }
     }
 }

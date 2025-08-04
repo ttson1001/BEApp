@@ -306,6 +306,17 @@ namespace BEAPI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ListOfValues");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("e83fdb81-1ca6-49da-bd91-f42ce99fd8ee"),
+                            CreationDate = new DateTimeOffset(new DateTime(2025, 8, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsDeleted = false,
+                            Label = "Loại sản Phẩm",
+                            Note = "CATEGORY",
+                            Type = 0
+                        });
                 });
 
             modelBuilder.Entity("BEAPI.Entities.Order", b =>
@@ -329,7 +340,7 @@ namespace BEAPI.Migrations
                     b.Property<DateTimeOffset?>("DeletionDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid>("ElderId")
+                    b.Property<Guid?>("ElderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsDeleted")
@@ -837,7 +848,7 @@ namespace BEAPI.Migrations
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             IsDeleted = false,
-                            Name = "User"
+                            Name = "Guardian"
                         },
                         new
                         {
@@ -903,14 +914,23 @@ namespace BEAPI.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsOtpUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
+
                     b.Property<Guid?>("ModificationById")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("ModificationDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("OTPId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("OtpCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset?>("OtpExpiredAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
@@ -963,6 +983,8 @@ namespace BEAPI.Migrations
                             FullName = "Nguyen Van A",
                             Gender = "Male",
                             IsDeleted = false,
+                            IsOtpUsed = false,
+                            IsVerified = true,
                             PasswordHash = "$2a$11$X9X4SPGxvVdQGQKkJkGZbOGXfHP4L7lqMZtYxQz4WPrGz7G6oUu0K",
                             PhoneNumber = "0901234567",
                             RoleId = new Guid("11111111-1111-1111-1111-111111111111"),
@@ -978,6 +1000,8 @@ namespace BEAPI.Migrations
                             Gender = "Female",
                             GuardianId = new Guid("11111111-1111-1111-1111-111111111111"),
                             IsDeleted = false,
+                            IsOtpUsed = false,
+                            IsVerified = true,
                             PasswordHash = "$2a$11$X9X4SPGxvVdQGQKkJkGZbOGXfHP4L7lqMZtYxQz4WPrGz7G6oUu0K",
                             PhoneNumber = "0909876543",
                             RoleId = new Guid("22222222-2222-2222-2222-222222222222"),
@@ -992,6 +1016,8 @@ namespace BEAPI.Migrations
                             FullName = "Admin System",
                             Gender = "Male",
                             IsDeleted = false,
+                            IsOtpUsed = false,
+                            IsVerified = true,
                             PasswordHash = "$2a$11$X9X4SPGxvVdQGQKkJkGZbOGXfHP4L7lqMZtYxQz4WPrGz7G6oUu0K",
                             PhoneNumber = "0912345678",
                             RoleId = new Guid("33333333-3333-3333-3333-333333333333"),
@@ -1177,8 +1203,7 @@ namespace BEAPI.Migrations
                     b.HasOne("BEAPI.Entities.User", "Elder")
                         .WithMany()
                         .HasForeignKey("ElderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Customer");
 

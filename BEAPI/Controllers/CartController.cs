@@ -1,8 +1,12 @@
-﻿using BEAPI.Dtos.Cart;
+﻿using BEAPI.Constants;
+using BEAPI.Dtos.Cart;
 using BEAPI.Dtos.Common;
+using BEAPI.Entities;
 using BEAPI.Entities.Enum;
+using BEAPI.Helper;
 using BEAPI.Services;
 using BEAPI.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BEAPI.Controllers
@@ -39,6 +43,24 @@ namespace BEAPI.Controllers
                 });
             }
         }
+            
+        [Authorize(Roles = UserContanst.UserRole)]
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetAllElderCarts()
+        {
+            try
+            {
+                var userId = User.GetUserId();
+
+                var carts = await _service.GetAllElderCarts(userId);
+                return Ok(new ResponseDto { Data = carts, Message = "Elder carts retrieved successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
 
         [HttpGet("[action]/{id}")]
         public async Task<IActionResult> GetCartById(string id)

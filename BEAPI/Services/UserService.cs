@@ -2,9 +2,11 @@
 using BEAPI.Dtos.Auth;
 using BEAPI.Entities;
 using BEAPI.Exceptions;
+using BEAPI.Model;
 using BEAPI.Repositories;
 using BEAPI.Services.IServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using QRCoder;
 
 namespace BEAPI.Services
@@ -14,11 +16,14 @@ namespace BEAPI.Services
         private readonly IRepository<User> _userRepo;
         private readonly IMapper _mapper;
         private readonly IJwtService _jwtService;
-        public UserService(IRepository<User> userRepo, IMapper mapper, IJwtService jwtService)
+        private readonly string _baseUrl;
+
+        public UserService(IOptions<AppSettings> options, IRepository<User> userRepo, IMapper mapper, IJwtService jwtService)
         {
             _userRepo = userRepo;
             _mapper = mapper;
             _jwtService = jwtService;
+            _baseUrl = options.Value.BaseUrl;
         }
 
         public async Task CreateElder(ElderRegisterDto elderRegisterDto, Guid userId)
@@ -48,7 +53,7 @@ namespace BEAPI.Services
             var elder = await _userRepo.Get().FirstOrDefaultAsync(u => u.Id == elderId && u.Role.Name == "Elder") ?? throw new Exception(ExceptionConstant.ElderNotFound);
             var token = _jwtService.GenerateToken(elder, expiresInMinutes: 2);
 
-            var qrUrl = $"https://localhost:7264/api/auth/qr-login?token={token}";
+            var qrUrl = $"{_baseUrl}/api/auth/qr-login?token={token}";
 
             using var qrGenerator = new QRCodeGenerator();
             using var qrCodeData = qrGenerator.CreateQrCode(qrUrl, QRCodeGenerator.ECCLevel.Q);

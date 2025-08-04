@@ -4,6 +4,6 @@ namespace BEAPI.Services.IServices
 {
     public interface IOrderService
     {
-        Task CreateElderOrderAsync(OrderCreateDto dto);
+        Task CreateOrderAsync(OrderCreateDto dto, bool isPaid);
     }
 }

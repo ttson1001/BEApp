@@ -1,5 +1,6 @@
 ﻿using BEAPI.Database;
 using BEAPI.Extension;
+using BEAPI.Model;
 using BEAPI.Services;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,6 +28,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<AppSettings>(
+    builder.Configuration.GetSection("AppSettings"));
+builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VNPAY"));
 builder.Services.AddDbContext<BeContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddSwaggerGen(c =>

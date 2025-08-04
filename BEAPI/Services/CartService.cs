@@ -42,6 +42,7 @@ namespace BEAPI.Services
             var cartId = GuidHelper.ParseOrThrow(id, "cartId");
             var cart = await _cartRepo.Get()
                 .Include(x => x.Customer)
+                .Include(x => x.Elder)
                 .Include(x => x.Items)
                     .FirstOrDefaultAsync(x => x.Id == cartId);
 
@@ -58,6 +59,8 @@ namespace BEAPI.Services
                 CustomerId = cart.CustomerId,
                 CustomerName = cart.Customer.FullName,
                 Status = cart.Status.ToString(),
+                ElderId = cart.Id,
+                ElderName = cart?.Elder?.FullName ?? null,
                 Items = listCart.Select(i => new CartItemDto
                 {
                     ProductVariantId = i.ProductVariantId,
@@ -72,7 +75,7 @@ namespace BEAPI.Services
         {
             var customerId = GuidHelper.ParseOrThrow(cusId, "cusId");
             
-            var cart = await _cartRepo.Get().Include(x => x.Customer)
+            var cart = await _cartRepo.Get().Include(x => x.Customer).Include(x => x.Elder)
                 .Include(x => x.Items).FirstOrDefaultAsync(x => x.CustomerId == customerId && x.Status == cartStatus);
 
             if (cart == null)
@@ -87,6 +90,8 @@ namespace BEAPI.Services
                 CustomerId = cart.CustomerId,
                 CustomerName = cart.Customer.FullName,
                 Status = cart.Status.ToString(),
+                ElderId = cart.Id,
+                ElderName = cart?.Elder?.FullName ?? null,
                 Items = listCart.Select(i => new CartItemDto
                 {
                     ProductVariantId = i.ProductVariantId,
@@ -144,6 +149,39 @@ namespace BEAPI.Services
 
             await _cartItemRepo.AddRangeAsync(newItems);
             await _cartRepo.SaveChangesAsync();
+        }
+
+        public async Task<List<CartDto>> GetAllElderCarts(string userId)
+        {
+            var customerId = GuidHelper.ParseOrThrow(userId, "userId");
+
+            var carts = await _cartRepo.Get()
+                .Include(x => x.Customer)
+                .Include(x => x.Elder)
+                .Include(x => x.Items)
+                    .ThenInclude(i => i.ProductVariant)
+                        .ThenInclude(pv => pv.Product)
+                .Where(x => x.CustomerId == customerId && x.Status == CartStatus.Created && x.Elder != null)
+                .ToListAsync();
+
+            var result = carts.Select(cart => new CartDto
+            {
+                CartId = cart.Id,
+                CustomerId = cart.CustomerId,
+                CustomerName = cart.Customer.FullName,
+                Status = cart.Status.ToString(),
+                ElderId = cart.ElderId,
+                ElderName = cart.Elder?.FullName ?? null,
+                Items = cart.Items.Select(i => new CartItemDto
+                {
+                    ProductVariantId = i.ProductVariantId,
+                    ProductName = i.ProductVariant.Product.Name ?? "",
+                    Quantity = i.Quantity,
+                    ProductPrice = i.ProductPrice
+                }).ToList()
+            }).ToList();
+
+            return result;
         }
     }
 }

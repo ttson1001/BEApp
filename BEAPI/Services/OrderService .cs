@@ -27,37 +27,37 @@ namespace BEAPI.Services
             _cartRepo = cartRepo;
         }
 
-        public async Task CreateElderOrderAsync(OrderCreateDto dto)
+        public async Task CreateOrderAsync(OrderCreateDto dto, bool isPaid)
         {
-            var CartId = GuidHelper.ParseOrThrow(dto.CartId, nameof(dto.CartId));
-            if (!await _cartRepo.Get().AnyAsync(u => u.Id == CartId))
-                throw new Exception("Cart not found");
-            var cart = _cartRepo.Get().Include(x => x.Items)
-                .ThenInclude(x => x.ProductVariant)
-                .ThenInclude(x => x.Product).First(u => u.Id == CartId && u.Status == CartStatus.Pending);
+            var cartId = GuidHelper.ParseOrThrow(dto.CartId, nameof(dto.CartId));
 
+            var cart = await _cartRepo.Get()
+                .Include(x => x.Items)
+                    .ThenInclude(x => x.ProductVariant)
+                        .ThenInclude(x => x.Product)
+                .FirstOrDefaultAsync(u => u.Id == cartId && u.Status == CartStatus.Pending) ?? throw new Exception("Cart not found or not in pending status");
             var price = cart.Items.Sum(x => x.ProductPrice);
-            
-            var elder = await _userRepo.Get().Include(x => x.Guardian).FirstAsync(x => x.Id == cart.CustomerId);
-           
+
             var order = new Order
             {
-                Customer = elder.Guardian,
-                ElderId = elder.Id,
+                CustomerId = cart.CustomerId,
+                ElderId = cart.ElderId,
                 Note = dto.Note,
-                OrderStatus = OrderStatus.Created,
+                OrderStatus = isPaid ? OrderStatus.Paid : OrderStatus.Fail,
                 TotalPrice = price,
             };
-            List<OrderDetail> orderDetails = new List<OrderDetail>();
-            orderDetails.AddRange(cart.Items.Select(x => new OrderDetail
+
+            var orderDetails = cart.Items.Select(x => new OrderDetail
             {
                 Order = order,
                 ProductVariant = x.ProductVariant,
                 Price = x.ProductPrice,
                 Quantity = x.Quantity,
                 ProductName = x.ProductVariant.Product.Name ?? "",
-            }));
+            }).ToList();
+
             cart.Status = CartStatus.Approve;
+
             await _orderRepo.AddAsync(order);
             await _orderRepo.SaveChangesAsync();
         }

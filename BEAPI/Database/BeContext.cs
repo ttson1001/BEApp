@@ -1,4 +1,5 @@
 ﻿using BEAPI.Entities;
+using BEAPI.Entities.Enum;
 using Microsoft.EntityFrameworkCore;
 
 namespace BEAPI.Database
@@ -65,7 +66,7 @@ namespace BEAPI.Database
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Role>().HasData(
-                 new Role { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "User" },
+                 new Role { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Guardian" },
                  new Role { Id = Guid.Parse("22222222-2222-2222-2222-222222222222"), Name = "Elder" },
                  new Role { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), Name = "Admin" }
             );
@@ -82,6 +83,7 @@ namespace BEAPI.Database
                     RoleId = Guid.Parse("11111111-1111-1111-1111-111111111111"), // Role User
                     Age = 25,
                     Gender = "Male",
+                    IsVerified = true,
                     CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
                 },
                 new User
@@ -96,6 +98,7 @@ namespace BEAPI.Database
                     GuardianId = Guid.Parse("11111111-1111-1111-1111-111111111111"), // Guardian = Nguyen Van A
                     Age = 30,
                     Gender = "Female",
+                    IsVerified = true,
                     CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
                 },
                 new User
@@ -108,10 +111,19 @@ namespace BEAPI.Database
                     PasswordHash = "$2a$11$X9X4SPGxvVdQGQKkJkGZbOGXfHP4L7lqMZtYxQz4WPrGz7G6oUu0K", // bcrypt hash 123456
                     RoleId = Guid.Parse("33333333-3333-3333-3333-333333333333"), // Role Admin
                     Age = 35,
+                    IsVerified = true,
                     Gender = "Male",
                     CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
                 }
             );
+            modelBuilder.Entity<ListOfValue>().HasData(new ListOfValue
+            {
+                Id = Guid.Parse("e83fdb81-1ca6-49da-bd91-f42ce99fd8ee"),
+                Label = "Loại sản Phẩm",
+                Note = "CATEGORY",
+                Type = MyValueType.Category,
+                CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
+            });
         }
     }
 }

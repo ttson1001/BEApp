@@ -20,7 +20,7 @@ namespace BEAPI.Controllers
         }
 
 
-        [Authorize(Roles ="User")]
+        [Authorize(Roles = UserContanst.UserRole)]
         [HttpPost("[action]")]
         public async Task<IActionResult> CreateElder([FromBody] ElderRegisterDto dto)
         {
@@ -47,7 +47,7 @@ namespace BEAPI.Controllers
         }
 
         [HttpPost("[action]")]
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = UserContanst.UserRole)]
         public async Task<IActionResult> GenerateQr([FromBody] Guid elderId)
         {
             try
