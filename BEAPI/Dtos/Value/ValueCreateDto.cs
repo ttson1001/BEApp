@@ -6,6 +6,7 @@
         public string Description { get; set; } = string.Empty;
         public string Label { get; set; } = string.Empty;
         public string ListOfValueId { get; set; } = string.Empty;
+        public Entities.Enum.ValueType Type { get; set; }
         public string? ChildListOfValueId { get; set; }
     }
 }

@@ -14,6 +14,8 @@ namespace BEAPI.MappingProfile
                     opt => opt.MapFrom(src => src.Label))
                 .ForMember(dest => dest.Note,
                     opt => opt.MapFrom(src => src.Note))
+                .ForMember(dest => dest.Type,
+                    opt => opt.MapFrom(src => src.Type))
                 .ForMember(dest => dest.Id,
                     opt => opt.MapFrom(src => Guid.NewGuid()));
 
@@ -22,6 +24,8 @@ namespace BEAPI.MappingProfile
                    opt => opt.MapFrom(src => src.Label))
                .ForMember(dest => dest.Note,
                    opt => opt.MapFrom(src => src.Note))
+               .ForMember(dest => dest.Type,
+                    opt => opt.MapFrom(src => src.Type))
                .ForMember(dest => dest.Id,
                    opt => opt.MapFrom(src => src.Id));
 
