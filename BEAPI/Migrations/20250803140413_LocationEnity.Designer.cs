@@ -4,6 +4,7 @@ using BEAPI.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BEAPI.Migrations
 {
     [DbContext(typeof(BeContext))]
-    partial class BeContextModelSnapshot : ModelSnapshot
+    [Migration("20250803140413_LocationEnity")]
+    partial class LocationEnity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -120,9 +123,6 @@ namespace BEAPI.Migrations
                     b.Property<DateTimeOffset?>("DeletionDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("ElderId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -140,11 +140,14 @@ namespace BEAPI.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("ElderId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Carts");
                 });
@@ -1132,13 +1135,11 @@ namespace BEAPI.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("BEAPI.Entities.User", "Elder")
+                    b.HasOne("BEAPI.Entities.User", null)
                         .WithMany("Carts")
-                        .HasForeignKey("ElderId");
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Customer");
-
-                    b.Navigation("Elder");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.CartItem", b =>

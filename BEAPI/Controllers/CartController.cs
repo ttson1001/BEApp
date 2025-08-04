@@ -1,5 +1,7 @@
 ﻿using BEAPI.Dtos.Cart;
 using BEAPI.Dtos.Common;
+using BEAPI.Entities.Enum;
+using BEAPI.Services;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,6 +36,93 @@ namespace BEAPI.Controllers
                 {
                     Message = ex.Message,
                     Data = null
+                });
+            }
+        }
+
+        [HttpGet("[action]/{id}")]
+        public async Task<IActionResult> GetCartById(string id)
+        {
+            try
+            {
+                var cart = await _service.GetCartByIdAsync(id);
+
+                if (cart == null)
+                {
+                    return NotFound(new ResponseDto
+                    {
+                        Data = null,
+                        Message = "Cart not found"
+                    });
+                }
+
+                return Ok(new ResponseDto
+                {
+                    Message = "Get cart successfully",
+                    Data = cart
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("[action]/{customerId}")]
+        public async Task<IActionResult> GetCartByCustomerId(string customerId, [FromQuery] CartStatus status)
+        {
+            try
+            {
+                var cart = await _service.GetCartByCustomerIdAsync(customerId, status);
+
+                if (cart == null)
+                {
+                    return NotFound(new ResponseDto
+                    {
+                        Data = null,
+                        Message = "Cart not found"
+                    });
+                }
+
+                return Ok(new ResponseDto
+                {
+                    Message = "Get cart successfully",
+                    Data = cart
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data= null,
+                    Message = ex.Message
+                });
+            }
+        }
+
+        [HttpPut("{id}/[action]")]
+        public async Task<IActionResult> ChangeCartStatus(string id, [FromQuery] CartStatus status)
+        {
+            try
+            {
+                await _service.ChangeStatus(status, id);
+
+                return Ok(new ResponseDto
+                {
+                    Data = null,
+                    Message = "Cart status updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
                 });
             }
         }

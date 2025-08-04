@@ -4,7 +4,7 @@
     {
         public string? Name { get; set; }
         public string? Brand { get; set; }
-        public string? Descriotion { get; set; }
+        public string? Description { get; set; }
         public string? VideoPath { get; set; }
         public int? Weight { get; set; }
         public int? Height { get; set; }

@@ -26,23 +26,86 @@ namespace BEAPI.Services
             _productVariantRepo = productVariantRepo;
         }
 
+        public async Task ChangeStatus(CartStatus cartStatus, string id)
+        {
+            var cartId = GuidHelper.ParseOrThrow(id, "cartId");
+
+            var cart = await _cartRepo.Get().FirstOrDefaultAsync(x => x.Id == cartId) ?? throw new Exception("Cart not found");
+
+            cart.Status = cartStatus;
+            _cartRepo.Update(cart);
+            await _cartRepo.SaveChangesAsync();
+        }
+
+        public async Task<CartDto?> GetCartByIdAsync(string id)
+        {
+            var cartId = GuidHelper.ParseOrThrow(id, "cartId");
+            var cart = await _cartRepo.Get()
+                .Include(x => x.Customer)
+                .Include(x => x.Items)
+                    .FirstOrDefaultAsync(x => x.Id == cartId);
+
+            if (cart == null)
+                return null;
+            var listCart = await _cartItemRepo.Get()
+                .Include(x => x.ProductVariant)
+                .ThenInclude(x => x.Product)
+                    .Where(x => x.CartId == cart.Id).ToArrayAsync();
+
+            return new CartDto
+            {
+                CartId = cart.Id,
+                CustomerId = cart.CustomerId,
+                CustomerName = cart.Customer.FullName,
+                Status = cart.Status.ToString(),
+                Items = listCart.Select(i => new CartItemDto
+                {
+                    ProductVariantId = i.ProductVariantId,
+                    ProductName = i.ProductVariant.Product.Name ?? "",
+                    Quantity = i.Quantity,
+                    ProductPrice = i.ProductPrice
+                }).ToList()
+            };
+        }
+
+        public async Task<CartDto?> GetCartByCustomerIdAsync(string cusId, CartStatus cartStatus)
+        {
+            var customerId = GuidHelper.ParseOrThrow(cusId, "cusId");
+            
+            var cart = await _cartRepo.Get().Include(x => x.Customer)
+                .Include(x => x.Items).FirstOrDefaultAsync(x => x.CustomerId == customerId && x.Status == cartStatus);
+
+            if (cart == null)
+                return null;
+            var listCart = await _cartItemRepo.Get()
+               .Include(x => x.ProductVariant)
+               .ThenInclude(x => x.Product)
+                   .Where(x => x.CartId == cart.Id).ToArrayAsync();
+            return new CartDto
+            {
+                CartId = cart.Id,
+                CustomerId = cart.CustomerId,
+                CustomerName = cart.Customer.FullName,
+                Status = cart.Status.ToString(),
+                Items = listCart.Select(i => new CartItemDto
+                {
+                    ProductVariantId = i.ProductVariantId,
+                    ProductName = i.ProductVariant.Product.Name ?? "",
+                    Quantity = i.Quantity,
+                    ProductPrice = i.ProductPrice
+                }).ToList()
+            };
+        }
+
         public async Task ReplaceCartAsync(CartReplaceAllDto dto)
         {
             var customerId = GuidHelper.ParseOrThrow(dto.CustomerId, nameof(dto.CustomerId));
-
-            if (!await _userRepo.Get().AnyAsync(u => u.Id == customerId))
-                throw new Exception("Customer not found");
-
+            var customer = await _userRepo.Get().FirstOrDefaultAsync(u => u.Id == customerId) ?? throw new Exception("Customer not found");
             var productVariantIds = dto.Items.Select(i => GuidHelper.ParseOrThrow(i.ProductVariantId)).ToList();
-            var elderIds = dto.Items.Select(i => GuidHelper.ParseOrThrow(i.ElderId)).ToList();
 
             var invalidProductVariants = await ValidationHelper.ValidateIdsExistAsync(_productVariantRepo, productVariantIds);
             if (invalidProductVariants.Any())
                 throw new Exception($"Invalid Products: {string.Join(", ", invalidProductVariants)}");
-
-            var invalidElders = await ValidationHelper.ValidateIdsExistAsync(_userRepo, elderIds);
-            if (invalidElders.Any())
-                throw new Exception($"Invalid Elders: {string.Join(", ", invalidElders)}");
 
             var priceDict = await _productVariantRepo.Get()
                     .Where(p => productVariantIds.Contains(p.Id))
@@ -55,7 +118,15 @@ namespace BEAPI.Services
 
             if (cart == null)
             {
-                cart = new Cart { CustomerId = customerId, Status = CartStatus.Created };
+                cart = new Cart { Status = CartStatus.Created };
+                if (customer.GuardianId == null)
+                {
+                    cart.CustomerId = customerId;
+                }else
+                {
+                    cart.ElderId = customerId;
+                    cart.CustomerId = (Guid)customer.GuardianId;
+                }
                 await _cartRepo.AddAsync(cart);
             }
             else
@@ -71,6 +142,7 @@ namespace BEAPI.Services
                 item.CartId = cart.Id;
             }
 
+            await _cartItemRepo.AddRangeAsync(newItems);
             await _cartRepo.SaveChangesAsync();
         }
     }

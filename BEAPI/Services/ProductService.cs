@@ -24,6 +24,77 @@ namespace BEAPI.Services
             _valueRepository = valueReposiroty;
         }
 
+        public async Task Update(ProductCreateDto dto, string id)
+        {
+            var productId = GuidHelper.ParseOrThrow(id, "productId");
+
+            var product = await _productRepo.Get()
+                .Include(p => p.ProductImages)
+                .Include(p => p.ProductCategoryValues)
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.ProductVariantValues)
+                .FirstOrDefaultAsync(p => p.Id == productId)
+                ?? throw new Exception("Product not found");
+
+            var guidValueIds = dto.ProductVariants
+                .SelectMany(v => v.ValueIds)
+                .Select(valueId => GuidHelper.ParseOrThrow(valueId, nameof(valueId)))
+                .ToList();
+
+            var notFoundIds = await ValidationHelper.ValidateIdsExistAsync(_valueRepository, guidValueIds);
+
+            if (notFoundIds.Any())
+                throw new Exception($"ValueIds not found: {string.Join(", ", notFoundIds)}");
+
+            product.Name = dto.Name;
+            product.Brand = dto.Brand;
+            product.Description = dto.Description;
+            product.VideoPath = dto.VideoPath;
+            product.Weight = dto.Weight;
+            product.Height = dto.Height;
+            product.Length = dto.Length;
+            product.Width = dto.Width;
+            product.ManufactureDate = dto.ManufactureDate;
+            product.ExpirationDate = dto.ExpirationDate;
+
+            product.ProductImages.Clear();
+            foreach (var img in dto.ProductImages)
+            {
+                product.ProductImages.Add(new ProductImage { URL = img.URL });
+            }
+
+            product.ProductCategoryValues.Clear();
+            foreach (var categoryId in dto.ValueCategoryIds)
+            {
+                product.ProductCategoryValues.Add(new ProductCategoryValue
+                {
+                    ValueId = GuidHelper.ParseOrThrow(categoryId, nameof(categoryId))
+                });
+            }
+
+            product.ProductVariants.Clear();
+            foreach (var variantDto in dto.ProductVariants)
+            {
+                var variant = new ProductVariant
+                {
+                    Price = variantDto.Price,
+                    Discount = variantDto.Discount,
+                    Stock = variantDto.Stock,
+                    IsActive = variantDto.IsActive,
+                    ProductVariantValues = variantDto.ValueIds
+                        .Select(valueId => new ProductVariantValue
+                        {
+                            ValueId = GuidHelper.ParseOrThrow(valueId, nameof(valueId))
+                        }).ToList()
+                };
+
+                product.ProductVariants.Add(variant);
+            }
+
+            _productRepo.Update(product);
+            await _productRepo.SaveChangesAsync();
+        }
+
         public async Task Create(ProductCreateDto dto)
         {
             var entity = _mapper.Map<Product>(dto);
@@ -77,6 +148,8 @@ namespace BEAPI.Services
                 .Include(p => p.ProductVariants)
                     .ThenInclude(v => v.ProductVariantValues)
                         .ThenInclude(vv => vv.Value)
+                .Include(x => x.ProductCategoryValues)
+                    .ThenInclude(x => x.Value)
                 .ToListAsync();
 
             return _mapper.Map<List<ProductDto>>(entities);

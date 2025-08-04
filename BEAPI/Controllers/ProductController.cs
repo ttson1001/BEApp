@@ -63,6 +63,29 @@ namespace BEAPI.Controllers
             }
         }
 
+        [HttpPut("[action]/{id}")]
+        public async Task<IActionResult> Update(string id, [FromBody] ProductCreateDto dto)
+        {
+            try
+            {
+                await _service.Update(dto, id);
+
+                return Ok(new ResponseDto
+                {
+                    Data = null,
+                    Message = "Product updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
+            }
+        }
+
         [HttpGet("[action]/{productId}")]
         public async Task<IActionResult> GetById(string productId)
         {

@@ -5,6 +5,9 @@ namespace BEAPI.Database
 {
     public class BeContext : DbContext
     {
+        public DbSet<Province> Provinces { get; set; }
+        public DbSet<District> Districts { get; set; }
+        public DbSet<Ward> Wards { get; set; }
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<Role> Roles { get; set; }

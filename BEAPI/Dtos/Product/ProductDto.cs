@@ -1,4 +1,6 @@
-﻿namespace BEAPI.Dtos.Product
+﻿using BEAPI.Dtos.Value;
+
+namespace BEAPI.Dtos.Product
 {
     public class ProductDto
     {
@@ -13,7 +15,7 @@
         public string? Width { get; set; }
         public DateTimeOffset? ManufactureDate { get; set; }
         public DateTimeOffset? ExpirationDate { get; set; }
-        public string ProductTypeId { get; set; } = string.Empty;
+        public List<ValueDto> Categories { get; set; } = new();
 
         public List<ProductImageDto> ProductImages { get; set; } = new();
         public List<ProductVariantDto> ProductVariants { get; set; } = new();
