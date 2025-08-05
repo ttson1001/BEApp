@@ -71,6 +71,17 @@ namespace BEAPI.Services
             await _userRepo.SaveChangesAsync();
         }
 
+        public async Task VerifyUserAsync(string otp)
+        {
+            var user = await _userRepo.Get()
+                .FirstOrDefaultAsync(u => u.OtpCode == otp)
+                ?? throw new Exception("OTP không hợp lệ.");
+
+            await _otpService.VerifyUserAsync(user, otp);
+
+            await _userRepo.SaveChangesAsync();
+        }
+
         public async Task ChangePasswordAsync(string userId, string oldPassword, string newPassword)
         {
             var parsedUserId = GuidHelper.ParseOrThrow(userId, nameof(userId));

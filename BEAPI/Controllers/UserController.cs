@@ -1,6 +1,7 @@
 ﻿using BEAPI.Constants;
 using BEAPI.Dtos.Auth;
 using BEAPI.Dtos.Common;
+using BEAPI.Dtos.User;
 using BEAPI.Exceptions;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
@@ -47,6 +48,20 @@ namespace BEAPI.Controllers
         }
 
         [HttpPost("[action]")]
+        public async Task<IActionResult> CreateUser([FromBody] UserCreateDto request)
+        {
+            try
+            {
+                await _userService.CreateUserAsync(request);
+                return Ok(new ResponseDto { Message = "The user has been created successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
+        [HttpPost("[action]")]
         [Authorize(Roles = UserContanst.UserRole)]
         public async Task<IActionResult> GenerateQr([FromBody] Guid elderId)
         {
@@ -73,6 +88,14 @@ namespace BEAPI.Controllers
                 });
             }
         }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> SearchUsers([FromBody] UserFilterDto request)
+        {
+            var result = await _userService.FilterUsersAsync(request);
+            return Ok(new ResponseDto { Data = result, Message = "Filter successful" });
+        }
+
 
         [HttpPost("[action]")]
         public async Task<IActionResult> QrLogin([FromQuery] string token)

@@ -1,4 +1,6 @@
 ﻿using BEAPI.Dtos.Auth;
+using BEAPI.Dtos.Common;
+using BEAPI.Dtos.User;
 
 namespace BEAPI.Services.IServices
 {
@@ -7,5 +9,7 @@ namespace BEAPI.Services.IServices
         Task CreateElder(ElderRegisterDto elderRegisterDto, Guid userId);
         Task<string> LoginByQrAsync(string token);
         Task<(string Token, string QrBase64)> GenerateElderLoginQrAsync(Guid elderId);
+        Task<PagedResult<UserListDto>> FilterUsersAsync(UserFilterDto request);
+        Task CreateUserAsync(UserCreateDto dto);
     }
 }

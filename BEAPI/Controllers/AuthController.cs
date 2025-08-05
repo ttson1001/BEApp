@@ -3,7 +3,6 @@ using BEAPI.Dtos.Auth;
 using BEAPI.Dtos.Common;
 using BEAPI.Entities;
 using BEAPI.Exceptions;
-using BEAPI.Services;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,6 +30,20 @@ namespace BEAPI.Controllers
             {
                 await _authService.ResetPasswordAsync(request);
                 return Ok(new ResponseDto { Message = "Password reset successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> VerifyUserAsync([FromQuery] string otpCode)
+        {
+            try
+            {
+                await _authService.VerifyUserAsync(otpCode);
+                return Ok(new ResponseDto { Message = "Verify successfully." });
             }
             catch (Exception ex)
             {

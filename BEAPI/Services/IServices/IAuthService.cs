@@ -9,6 +9,7 @@ namespace BEAPI.Services.IServices
         Task<string> LoginAsync(LoginDto dto);
         Task<User> FindUserByEmailOrPhoneAsync(string emailOrPhone);
         Task ResetPasswordAsync(ResetPasswordDto request);
+        Task VerifyUserAsync(string otp);
         Task ChangePasswordAsync(string userId, string oldPassword, string newPassword);
     }
 }

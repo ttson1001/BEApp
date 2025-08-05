@@ -1,10 +1,15 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using BEAPI.Dtos.Auth;
+using BEAPI.Dtos.Common;
+using BEAPI.Dtos.User;
 using BEAPI.Entities;
 using BEAPI.Exceptions;
+using BEAPI.Helper;
 using BEAPI.Model;
 using BEAPI.Repositories;
 using BEAPI.Services.IServices;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using QRCoder;
@@ -48,6 +53,63 @@ namespace BEAPI.Services
             await _userRepo.SaveChangesAsync();
         }
 
+        public async Task CreateUserAsync(UserCreateDto dto)
+        {
+            if (await _userRepo.Get().AnyAsync(u => u.Email == dto.Email || u.UserName == dto.UserName || u.PhoneNumber == dto.PhoneNumber))
+                throw new Exception("Email, username hoặc số điện thoại đã tồn tại.");
+
+            var user = new User
+            {
+                FullName = dto.FullName,
+                Email = dto.Email,
+                UserName = dto.UserName,
+                PhoneNumber = dto.PhoneNumber,
+                RoleId = GuidHelper.ParseOrThrow(dto.RoleId, nameof(dto.RoleId)),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                IsVerified = false
+            };
+
+            await _userRepo.AddAsync(user);
+            await _userRepo.SaveChangesAsync();
+        }
+
+
+        public async Task<PagedResult<UserListDto>> FilterUsersAsync(UserFilterDto request)
+        {
+            var query = _userRepo.Get().Include(u => u.Role).AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                query = query.Where(u =>
+                    u.FullName.Contains(request.SearchTerm) ||
+                    u.UserName.Contains(request.SearchTerm) ||
+                    u.Email.Contains(request.SearchTerm));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.RoleId))
+            {
+                var roleIdGuid = GuidHelper.ParseOrThrow(request.RoleId, nameof(request.RoleId));
+                query = query.Where(u => u.RoleId == roleIdGuid);
+            }
+
+            var totalItems = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(u => u.CreationDate)
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ProjectTo<UserListDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return new PagedResult<UserListDto>
+            {
+                Items = items,
+                TotalItems = totalItems,
+                Page = request.Page,
+                PageSize = request.PageSize
+            };
+
+        }
+
         public async Task<(string Token, string QrBase64)> GenerateElderLoginQrAsync(Guid elderId)
         {
             var elder = await _userRepo.Get().FirstOrDefaultAsync(u => u.Id == elderId && u.Role.Name == "Elder") ?? throw new Exception(ExceptionConstant.ElderNotFound);
@@ -74,5 +136,7 @@ namespace BEAPI.Services
             var elder = await _userRepo.Get().Include(x => x.Role).FirstOrDefaultAsync(x => x.Id == Guid.Parse(elderId));
             return elder == null ? throw new Exception(ExceptionConstant.ElderNotFound) : _jwtService.GenerateToken(elder, null);
         }
+
+        
     }
 }

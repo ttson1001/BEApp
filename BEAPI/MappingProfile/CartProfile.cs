@@ -12,6 +12,5 @@ namespace BEAPI.MappingProfile
                 .ForMember(d => d.ProductVariantId, o => o.MapFrom(s => Guid.Parse(s.ProductVariantId)))
                 .ForMember(d => d.Quantity, o => o.MapFrom(s => s.Quantity));
         }
-
     }
 }

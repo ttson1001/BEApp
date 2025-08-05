@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BEAPI.Constants;
 using BEAPI.Dtos.Auth;
+using BEAPI.Dtos.User;
 using BEAPI.Entities;
 using Org.BouncyCastle.Crypto.Generators;
 
@@ -23,6 +24,7 @@ namespace BEAPI.MappingProfile
                     opt => opt.MapFrom(src => Guid.NewGuid()))
                 .ForMember(dest => dest.RoleId,
                     opt => opt.MapFrom(src => Guid.Parse(UserContanst.UserRoleId)));
+            CreateMap<User, UserListDto>();
 
             CreateMap<ElderRegisterDto, User>()
                 .ForMember(dest => dest.UserName,
