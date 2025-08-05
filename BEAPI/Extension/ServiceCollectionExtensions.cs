@@ -1,5 +1,4 @@
-﻿using BEAPI.Model;
-using BEAPI.PaymentService.VnPay;
+﻿using BEAPI.PaymentService.VnPay;
 using BEAPI.Repositories;
 using BEAPI.Services;
 using BEAPI.Services.IServices;
@@ -24,6 +23,9 @@ namespace BEAPI.Extension
             services.AddScoped<IOtpService, OtpService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IBrandService, BrandService>();
+            services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IStatisticService, StatisticService>();
             services.AddScoped<VNPayService>();
         }
     }

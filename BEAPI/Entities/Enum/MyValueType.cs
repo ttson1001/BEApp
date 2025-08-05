@@ -3,6 +3,7 @@
     public enum MyValueType
     {
         Category,
-        ProductProperty
+        ProductProperty,
+        Brand
     }
 }

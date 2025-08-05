@@ -1,5 +1,4 @@
-﻿using BEAPI.Controllers;
-using BEAPI.Dtos.Common;
+﻿using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Product;
 
 namespace BEAPI.Services.IServices

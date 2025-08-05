@@ -16,8 +16,6 @@ namespace BEAPI.Dtos.Product
         public DateTimeOffset? ManufactureDate { get; set; }
         public DateTimeOffset? ExpirationDate { get; set; }
         public List<ValueDto> Categories { get; set; } = new();
-
-        public List<ProductImageDto> ProductImages { get; set; } = new();
         public List<ProductVariantDto> ProductVariants { get; set; } = new();
     }
 }

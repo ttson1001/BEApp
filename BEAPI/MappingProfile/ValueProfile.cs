@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BEAPI.Dtos.Category;
 using BEAPI.Dtos.ListOfValue;
 using BEAPI.Dtos.Value;
 using BEAPI.Entities;
@@ -45,7 +46,11 @@ namespace BEAPI.MappingProfile
             CreateMap<ListOfValue, ListOfValueDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()))
                 .ForMember(dest => dest.Values, opt => opt.MapFrom(src => src.Values));
-
+            
+            CreateMap<Value, CategoryValueDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()))
+                .ForMember(dest => dest.ChildrenId, opt => opt.MapFrom(src => src.ChildListOfValue.Id.ToString() ?? null))
+                .ForMember(dest => dest.ChildrentLabel, opt => opt.MapFrom(src => src.ChildListOfValue.Label.ToString() ?? null));
         }
     }
 }

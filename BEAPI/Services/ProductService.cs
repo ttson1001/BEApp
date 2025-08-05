@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using BEAPI.Controllers;
 using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Product;
 using BEAPI.Dtos.Value;
@@ -29,7 +28,6 @@ namespace BEAPI.Services
             var productId = GuidHelper.ParseOrThrow(id, "productId");
 
             var product = await _productRepo.Get()
-                .Include(p => p.ProductImages)
                 .Include(p => p.ProductCategoryValues)
                 .Include(p => p.ProductVariants)
                     .ThenInclude(v => v.ProductVariantValues)
@@ -57,12 +55,6 @@ namespace BEAPI.Services
             product.ManufactureDate = dto.ManufactureDate;
             product.ExpirationDate = dto.ExpirationDate;
 
-            product.ProductImages.Clear();
-            foreach (var img in dto.ProductImages)
-            {
-                product.ProductImages.Add(new ProductImage { URL = img.URL });
-            }
-
             product.ProductCategoryValues.Clear();
             foreach (var categoryId in dto.ValueCategoryIds)
             {
@@ -85,7 +77,12 @@ namespace BEAPI.Services
                         .Select(valueId => new ProductVariantValue
                         {
                             ValueId = GuidHelper.ParseOrThrow(valueId, nameof(valueId))
-                        }).ToList()
+                        }).ToList(),
+                    ProductImages = variantDto.ProductImages
+                        ?.Select(img => new ProductImage
+                        {
+                            URL = img.URL
+                        }).ToList() ?? new List<ProductImage>()
                 };
 
                 product.ProductVariants.Add(variant);
@@ -114,14 +111,11 @@ namespace BEAPI.Services
             if (notFoundIds.Any())
                 throw new Exception($"ValueIds not found: {string.Join(", ", notFoundIds)}");
 
-            entity.ProductImages = dto.ProductImages
-                .Select(img => new ProductImage { URL = img.URL })
-                .ToList();
-
-            entity.ProductCategoryValues = dto.ValueCategoryIds.Select(categoryId => new ProductCategoryValue
-            {
-                ValueId = GuidHelper.ParseOrThrow(categoryId, nameof(categoryId))
-            }).ToList();
+            entity.ProductCategoryValues = dto.ValueCategoryIds
+                .Select(categoryId => new ProductCategoryValue
+                {
+                    ValueId = GuidHelper.ParseOrThrow(categoryId, nameof(categoryId))
+                }).ToList();
 
             entity.ProductVariants = dto.ProductVariants
                 .Select(variantDto => new ProductVariant
@@ -134,17 +128,24 @@ namespace BEAPI.Services
                         .Select(valueId => new ProductVariantValue
                         {
                             ValueId = GuidHelper.ParseOrThrow(valueId, nameof(valueId))
-                        }).ToList()
+                        }).ToList(),
+                    ProductImages = variantDto.ProductImages?
+                        .Select(img => new ProductImage
+                        {
+                            URL = img.URL
+                        }).ToList() ?? new List<ProductImage>()
                 }).ToList();
 
             await _productRepo.AddAsync(entity);
             await _productRepo.SaveChangesAsync();
         }
 
+
         public async Task<List<ProductDto>> GetAll()
         {
             var entities = await _productRepo.Get()
-                .Include(p => p.ProductImages)
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.ProductImages)
                 .Include(p => p.ProductVariants)
                     .ThenInclude(v => v.ProductVariantValues)
                         .ThenInclude(vv => vv.Value)
@@ -160,10 +161,13 @@ namespace BEAPI.Services
             var guidId = GuidHelper.ParseOrThrow(productId, nameof(productId));
 
             var entity = await _productRepo.Get()
-                .Include(p => p.ProductImages)
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.ProductImages)
                 .Include(p => p.ProductVariants)
                     .ThenInclude(v => v.ProductVariantValues)
                         .ThenInclude(vv => vv.Value)
+                .Include(p => p.ProductCategoryValues)
+                    .ThenInclude(x => x.Value)
                 .FirstOrDefaultAsync(x => x.Id == guidId)
                 ?? throw new Exception("Product not found");
 
@@ -174,7 +178,7 @@ namespace BEAPI.Services
         {
             var query = _productRepo.Get()
                 .Include(p => p.ProductVariants)
-                .Include(p => p.ProductImages)
+                    .ThenInclude(v => v.ProductImages)
                 .Include(p => p.ProductCategoryValues)
                     .ThenInclude(pcv => pcv.Value)
                 .AsQueryable();
@@ -222,7 +226,8 @@ namespace BEAPI.Services
                         .Select(v => v.Price)
                         .FirstOrDefault(),
                     Description = p.Description,
-                    ImageUrl = p.ProductImages
+                    ImageUrl = p.ProductVariants
+                        .SelectMany(v => v.ProductImages)
                         .OrderBy(img => img.CreationDate)
                         .Select(img => img.URL)
                         .FirstOrDefault(),
@@ -245,6 +250,5 @@ namespace BEAPI.Services
                 Items = items
             };
         }
-
     }
 }

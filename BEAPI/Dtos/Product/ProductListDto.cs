@@ -1,6 +1,6 @@
 ﻿using BEAPI.Dtos.Value;
 
-namespace BEAPI.Controllers
+namespace BEAPI.Dtos.Product
 {
     public class ProductListDto
     {

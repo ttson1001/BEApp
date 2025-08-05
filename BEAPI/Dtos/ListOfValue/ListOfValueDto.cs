@@ -1,4 +1,5 @@
-﻿using BEAPI.Dtos.Value;
+﻿using BEAPI.Dtos.Category;
+using BEAPI.Dtos.Value;
 
 namespace BEAPI.Dtos.ListOfValue
 {
@@ -9,6 +10,6 @@ namespace BEAPI.Dtos.ListOfValue
         public string Note { get; set; } = string.Empty;
 
         public Entities.Enum.MyValueType Type { get; set; }
-        public List<ValueDto> Values { get; set; } = new List<ValueDto>();
+        public List<CategoryValueDto> Values { get; set; } = new List<CategoryValueDto>();
     }
 }

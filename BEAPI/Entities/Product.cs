@@ -12,7 +12,6 @@
         public int? Height { get; set; }
         public int? Length { get; set; }
         public int? Width { get; set; }
-        public List<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
         public List<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
         public List<ProductCategoryValue> ProductCategoryValues { get; set; } = new List<ProductCategoryValue>();
     }

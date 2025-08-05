@@ -13,7 +13,6 @@
         public DateTimeOffset? ManufactureDate { get; set; }
         public DateTimeOffset? ExpirationDate { get; set; }
         public List<string> ValueCategoryIds { get; set; } = new();
-        public List<ProductImageCreateDto> ProductImages { get; set; } = new();
         public List<ProductVariantCreateDto> ProductVariants { get; set; } = new();
     }
 }

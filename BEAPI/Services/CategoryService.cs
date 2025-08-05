@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using BEAPI.Dtos.Category;
+using BEAPI.Dtos.ListOfValue;
 using BEAPI.Dtos.Value;
 using BEAPI.Entities;
+using BEAPI.Helper;
 using BEAPI.Repositories;
 using BEAPI.Services.IServices;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +20,26 @@ namespace BEAPI.Services
             _repository = repository;
             _mapper = mapper;
             _valueRepo = valueRepo;
+        }
+
+        public async Task CreateListCategory(List<CreateCategoryValueDto> categoryValueDtos)
+        {
+            var root = await _repository.Get()
+              .Include(x => x.Values)
+              .FirstOrDefaultAsync(x => x.Note == "CATEGORY" && x.Type == Entities.Enum.MyValueType.Category)
+              ?? throw new Exception("ListOfValue not found");
+
+            var values = categoryValueDtos.Select(val => new Value
+            {
+                Code = val.Code,
+                Label = val.Label,
+                Description = val.Description,
+                Type = Entities.Enum.MyValueType.Category,
+                ListOfValueId = root.Id
+            }).ToList();
+
+            await _valueRepo.AddRangeAsync(values);
+            await _valueRepo.SaveChangesAsync();
         }
 
         public async Task CreateListOfValueWithValuesAsync(ListOfValueWithValuesCreateDto dto)
@@ -42,6 +64,20 @@ namespace BEAPI.Services
 
             await _repository.AddAsync(listEntity);
             await _repository.SaveChangesAsync();
+        }
+
+        public async Task<List<ListOfValueDto>> GetListCategory()
+        {
+            var listCaterory = await _repository.Get().Include(x => x.Values).ThenInclude(x => x.ChildListOfValue).Where(x => x.Type == Entities.Enum.MyValueType.Category).ToListAsync();
+
+            return _mapper.Map<List<ListOfValueDto>>(listCaterory); 
+        }
+
+        public async Task<List<CategoryValueDto>> GetListValueCategoryById(string categoryId)
+        {
+            var guuiCategoryId = GuidHelper.ParseOrThrow(categoryId, nameof(categoryId));
+            var category = await _repository.Get().Include(x => x.Values).ThenInclude(x => x.ChildListOfValue).Where(x => x.Id == guuiCategoryId).FirstOrDefaultAsync() ?? throw new Exception("Category not found");
+            return _mapper.Map<List<CategoryValueDto>>(category.Values);
         }
 
         public async Task<ListOfValueTreeDto> GetListOfValueTreeAsync()
@@ -99,6 +135,63 @@ namespace BEAPI.Services
                 return dto;
             }
             return BuildListTree(rootId);
+        }
+
+        public async Task LinkSubCategory(LinkCategoryDto linkCategoryDto)
+        {
+            var valueId = GuidHelper.ParseOrThrow(linkCategoryDto.CategoryId, nameof(linkCategoryDto.CategoryId));
+            var value = await _valueRepo.Get().FirstOrDefaultAsync(x => x.Id == valueId) ?? throw new Exception("Category not found");
+            var sublistCategoryId = GuidHelper.ParseOrThrow(linkCategoryDto.SubCategoryId, nameof(linkCategoryDto.SubCategoryId));
+            var root = await _repository.Get().FirstOrDefaultAsync(x => x.Id == sublistCategoryId) ?? throw new Exception("Sublist category not found");
+            if (root.Note == "CATEGORY")
+            {
+                throw new Exception("Don't not link category root");
+            }
+            value.ChildListOfValueId = sublistCategoryId;
+            await _valueRepo.SaveChangesAsync();
+        }
+
+        public List<CategoryValueLeafWithPathDto> GetLeafNodesWithPaths(ListOfValueTreeDto tree)
+        {
+            var result = new List<CategoryValueLeafWithPathDto>();
+
+            void Traverse(List<ValueTreeNodeDto> nodes, List<string> path)
+            {
+                foreach (var node in nodes)
+                {
+                    var currentPath = new List<string>(path) { node.ValueId };
+
+                    if (node.Children != null && node.Children.Any())
+                    {
+                        foreach (var child in node.Children)
+                        {
+                            Traverse(child.Values, currentPath);
+                        }
+                    }
+                    else
+                    {
+                        result.Add(new CategoryValueLeafWithPathDto
+                        {
+                            ValueId = node.ValueId,
+                            Code = node.Code,
+                            Label = node.Label,
+                            Description = node.Description,
+                            Type = node.Type,
+                            Path = currentPath
+                        });
+                    }
+                }
+            }
+
+            Traverse(tree.Values, new List<string>());
+            return result;
+        }
+
+        public async Task<List<ListOfValueDto>> GetListCategoryNoValue()
+        {
+            var listCaterory = await _repository.Get().Where(x => x.Type == Entities.Enum.MyValueType.Category).ToListAsync();
+
+            return _mapper.Map<List<ListOfValueDto>>(listCaterory);
         }
     }
 }

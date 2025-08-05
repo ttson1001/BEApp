@@ -11,6 +11,7 @@ namespace BEAPI.Entities
         public bool IsActive { get; set; } = true;
         public Guid ProductId { get; set; }
         public Product Product { get; set; }
+        public List<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
         public List<ProductVariantValue> ProductVariantValues { get; set; } = new List<ProductVariantValue>();
     }
 }
