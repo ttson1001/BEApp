@@ -4,6 +4,7 @@
     {
         Category,
         ProductProperty,
-        Brand
+        Brand,
+        Relationship,
     }
 }

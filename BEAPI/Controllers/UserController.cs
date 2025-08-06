@@ -1,6 +1,6 @@
 ﻿using BEAPI.Constants;
-using BEAPI.Dtos.Auth;
 using BEAPI.Dtos.Common;
+using BEAPI.Dtos.Elder;
 using BEAPI.Dtos.User;
 using BEAPI.Exceptions;
 using BEAPI.Services.IServices;
@@ -19,33 +19,6 @@ namespace BEAPI.Controllers
         public UserController(IUserService userService)
         {
             _userService = userService;
-        }
-
-
-        [Authorize(Roles = UserContanst.UserRole)]
-        [HttpPost("[action]")]
-        public async Task<IActionResult> CreateElder([FromBody] ElderRegisterDto dto)
-        {
-            var res = new ResponseDto();
-            var userId = User.FindFirst("UserId")?.Value;
-            if (userId == null) {
-                res.Message = ExceptionConstant.UserIdMissing;
-                return BadRequest(res);
-            }
-            try
-            {
-                await _userService.CreateElder(dto,Guid.Parse(userId.ToString()));
-                res.Message = MessageConstants.RegisterSuccess;
-                return StatusCode(StatusCodes.Status201Created, res);
-            }
-            catch (Exception ex)
-            {
-                res.Message = ex.Message;
-                if (ex.Message == ExceptionConstant.UserAlreadyExists)
-                    return Conflict(res);
-
-                return BadRequest(res);
-            }
         }
 
         [HttpPost("[action]")]

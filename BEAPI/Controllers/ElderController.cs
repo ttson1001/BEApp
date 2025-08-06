@@ -1,8 +1,8 @@
-﻿using BEAPI.Dtos.Common;
+﻿using BEAPI.Constants;
+using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Elder;
-using BEAPI.Dtos.User;
+using BEAPI.Exceptions;
 using BEAPI.Helper;
-using BEAPI.Services;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,10 +14,39 @@ namespace BEAPI.Controllers
     public class ElderController : ControllerBase
     {
         private readonly IElderService _elderService;
+        private readonly IUserService _userService;
 
-        public ElderController(IElderService elderService)
+        public ElderController(IElderService elderService, IUserService userService)
         {
             _elderService = elderService;
+            _userService = userService;
+        }
+
+        [Authorize(Roles = UserContanst.UserRole)]
+        [HttpPost("[action]")]
+        public async Task<IActionResult> CreateElder([FromBody] ElderRegisterDto dto)
+        {
+            var res = new ResponseDto();
+            var userId = User.FindFirst("UserId")?.Value;
+            if (userId == null)
+            {
+                res.Message = ExceptionConstant.UserIdMissing;
+                return BadRequest(res);
+            }
+            try
+            {
+                await _userService.CreateElder(dto, Guid.Parse(userId.ToString()));
+                res.Message = MessageConstants.RegisterSuccess;
+                return StatusCode(StatusCodes.Status201Created, res);
+            }
+            catch (Exception ex)
+            {
+                res.Message = ex.Message;
+                if (ex.Message == ExceptionConstant.UserAlreadyExists)
+                    return Conflict(res);
+
+                return BadRequest(res);
+            }
         }
 
         [Authorize]

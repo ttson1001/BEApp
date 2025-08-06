@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using BEAPI.Dtos.Auth;
 using BEAPI.Dtos.Common;
+using BEAPI.Dtos.Elder;
 using BEAPI.Dtos.User;
 using BEAPI.Entities;
 using BEAPI.Exceptions;
@@ -9,7 +9,6 @@ using BEAPI.Helper;
 using BEAPI.Model;
 using BEAPI.Repositories;
 using BEAPI.Services.IServices;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using QRCoder;
@@ -21,14 +20,26 @@ namespace BEAPI.Services
         private readonly IRepository<User> _userRepo;
         private readonly IMapper _mapper;
         private readonly IJwtService _jwtService;
+        private readonly IRepository<District> _districtRepo;
+        private readonly IRepository<Ward> _warRepo;
+        private readonly IRepository<Province> _provineRepo;
         private readonly string _baseUrl;
 
-        public UserService(IOptions<AppSettings> options, IRepository<User> userRepo, IMapper mapper, IJwtService jwtService)
+        public UserService(IOptions<AppSettings> options,
+            IRepository<District> districtRepo,
+            IRepository<Ward> warRepo,
+            IRepository<Province> provineRepo,
+            IRepository<User> userRepo,
+            IMapper mapper,
+            IJwtService jwtService)
         {
             _userRepo = userRepo;
             _mapper = mapper;
             _jwtService = jwtService;
             _baseUrl = options.Value.BaseUrl;
+            _districtRepo = districtRepo;
+            _warRepo = warRepo;
+            _provineRepo = provineRepo;
         }
 
         public async Task CreateElder(ElderRegisterDto elderRegisterDto, Guid userId)
@@ -49,6 +60,40 @@ namespace BEAPI.Services
             user.Age = age;
             user.GuardianId = userId;
 
+            if (elderRegisterDto.Addresses.Count != 0)
+            {
+                var addresses = _mapper.Map<List<Address>>(elderRegisterDto.Addresses);
+
+                var provinceIds = await _provineRepo.Get().Select(p => p.ProvinceID).ToListAsync();
+                var districtIds = await _districtRepo.Get().Select(d => d.DistrictID).ToListAsync();
+                var wardCodes = await _warRepo.Get().Select(w => w.WardCode).ToListAsync();
+
+                foreach (var address in addresses)
+                {
+                    if (!provinceIds.Contains(address.ProvinceID))
+                        throw new Exception($"ProvinceID {address.ProvinceID} does not exist");
+
+                    if (!districtIds.Contains(address.DistrictID))
+                        throw new Exception($"DistrictID {address.DistrictID} does not exist");
+
+                    if (!wardCodes.Contains(address.WardCode))
+                        throw new Exception($"WardCode {address.WardCode} does not exist");
+
+                    address.User = user;
+                }
+            }
+
+            if (elderRegisterDto.CategoryValueIds.Count > 0)
+            {
+                user.UserCategories = elderRegisterDto.CategoryValueIds
+                    .Select(catId => new UserCategoryValue
+                    {
+                        Id = Guid.NewGuid(),
+                        ValueId = GuidHelper.ParseOrThrow(catId, nameof(catId)),
+                        User = user
+                    }).ToList();
+            }
+
             await _userRepo.AddAsync(user);
             await _userRepo.SaveChangesAsync();
         }
@@ -56,7 +101,7 @@ namespace BEAPI.Services
         public async Task CreateUserAsync(UserCreateDto dto)
         {
             if (await _userRepo.Get().AnyAsync(u => u.Email == dto.Email || u.UserName == dto.UserName || u.PhoneNumber == dto.PhoneNumber))
-                throw new Exception("Email, username hoặc số điện thoại đã tồn tại.");
+                throw new Exception("Email, username or Phonenumber have been already.");
 
             var user = new User
             {
@@ -137,6 +182,6 @@ namespace BEAPI.Services
             return elder == null ? throw new Exception(ExceptionConstant.ElderNotFound) : _jwtService.GenerateToken(elder, null);
         }
 
-        
+
     }
 }

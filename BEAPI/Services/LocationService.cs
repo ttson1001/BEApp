@@ -1,4 +1,5 @@
-﻿using BEAPI.Database;
+﻿// LocationService.cs
+using BEAPI.Database;
 using BEAPI.Entities;
 using BEAPI.Services.IServices;
 using Microsoft.EntityFrameworkCore;
@@ -60,7 +61,6 @@ public class LocationService : ILocationService
             if (!apiProvinces.Any(p => p.ProvinceID == dbProvince.ProvinceID))
             {
                 dbProvince.IsDeleted = true;
-                _context.Provinces.Update(dbProvince);
             }
         }
 
@@ -77,8 +77,6 @@ public class LocationService : ILocationService
                 existing.ProvinceName = apiProvince.ProvinceName;
                 existing.Code = apiProvince.Code;
                 existing.IsDeleted = false;
-
-                _context.Provinces.Update(existing);
             }
         }
 
@@ -109,7 +107,6 @@ public class LocationService : ILocationService
             if (!apiDistricts.Any(d => d.DistrictID == dbDistrict.DistrictID))
             {
                 dbDistrict.IsDeleted = true;
-                _context.Districts.Update(dbDistrict);
             }
         }
 
@@ -129,8 +126,6 @@ public class LocationService : ILocationService
                 existing.Type = apiDistrict.Type;
                 existing.SupportType = apiDistrict.SupportType;
                 existing.IsDeleted = false;
-
-                _context.Districts.Update(existing);
             }
         }
 
@@ -140,9 +135,11 @@ public class LocationService : ILocationService
     public async Task SyncAllWardsAsync(List<int> districtIds)
     {
         var dbWards = await _context.Wards.ToListAsync();
-        var allTasks = districtIds.Select(districtId => SyncWardForDistrict(districtId, dbWards)).ToList();
 
-        await Task.WhenAll(allTasks);
+        foreach (var districtId in districtIds)
+        {
+            await SyncWardForDistrict(districtId, dbWards);
+        }
 
         await _context.SaveChangesAsync();
     }
@@ -198,9 +195,5 @@ public class LocationService : ILocationService
                                         .ToListAsync();
 
         await SyncAllWardsAsync(districtIds);
-
-        await _context.SaveChangesAsync();
     }
-
-
 }

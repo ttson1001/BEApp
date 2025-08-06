@@ -116,14 +116,33 @@ namespace BEAPI.Database
                     CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
                 }
             );
-            modelBuilder.Entity<ListOfValue>().HasData(new ListOfValue
-            {
-                Id = Guid.Parse("e83fdb81-1ca6-49da-bd91-f42ce99fd8ee"),
-                Label = "Loại sản Phẩm",
-                Note = "CATEGORY",
-                Type = MyValueType.Category,
-                CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
-            });
+            modelBuilder.Entity<ListOfValue>().HasData(
+                new ListOfValue
+                {
+                    Id = Guid.Parse("e83fdb81-1ca6-49da-bd91-f42ce99fd8ee"),
+                    Label = "Loại sản phẩm",
+                    Note = "CATEGORY",
+                    Type = MyValueType.Category,
+                    CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
+                },
+                new ListOfValue
+                {
+                    Id = Guid.Parse("a23f89a1-2c34-4b2d-9876-08dcb9a3abcd"),
+                    Label = "Thương hiệu",
+                    Note = "BRAND",
+                    Type = MyValueType.Brand,
+                    CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
+                },
+                new ListOfValue
+                {
+                    Id = Guid.Parse("c47fabcd-77f2-4f55-8322-08dcb9a3cdef"),
+                    Label = "Mối quan hệ",
+                    Note = "RELATIONSHIP",
+                    Type = MyValueType.Relationship,
+                    CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
+                }
+            );
+
         }
     }
 }

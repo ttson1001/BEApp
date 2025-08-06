@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BEAPI.Database;
 using BEAPI.Dtos.Elder;
 using BEAPI.Entities;
 using BEAPI.Helper;
@@ -11,26 +12,95 @@ namespace BEAPI.Services
     public class ElderService : IElderService
     {
         private readonly IRepository<User> _repository;
+        private readonly IRepository<Address> _addressRepo;
+        private readonly IRepository<District> _districtRepo;
+        private readonly IRepository<Ward> _warRepo;
+        private readonly IRepository<Province> _provineRepo;
         private readonly IMapper _mapper;
 
-        public ElderService(IMapper mapper, IRepository<User> repository)
+        public ElderService(IMapper mapper, IRepository<User> repository, IRepository<Address> addressRepo, IRepository<District> districtRepo, IRepository<Ward> warRepo, IRepository<Province> provineRepo)
         {
             _mapper = mapper;
             _repository = repository;
+            _addressRepo = addressRepo;
+            _districtRepo = districtRepo;
+            _warRepo = warRepo;
+            _provineRepo = provineRepo;
         }
 
         public async Task<List<ElderDto>> GetElderByCusId(string cusId)
         {
             var guidCus = GuidHelper.ParseOrThrow(cusId, nameof(cusId));
-            var list = await _repository.Get().Where(x => x.GuardianId == guidCus).ToListAsync();
+            var list = await _repository.Get().Include(x => x.Addresses).Include(x => x.UserCategories)
+        .ThenInclude(uc => uc.Value).Where(x => x.GuardianId == guidCus).ToListAsync();
             return _mapper.Map<List<ElderDto>>(list);
         }
 
         public async Task UpdateElderAsync(ElderUpdateDto dto)
         {
             var userId = GuidHelper.ParseOrThrow(dto.Id, nameof(dto.Id));
-            var user = await _repository.Get().FirstOrDefaultAsync(u => u.Id == userId) ?? throw new Exception("User not found");
+
+            var user = await _repository.Get()
+                .Include(u => u.Addresses)  
+                .FirstOrDefaultAsync(u => u.Id == userId)
+                ?? throw new Exception("User not found");
+
+            if (dto.BirthDate > DateTimeOffset.UtcNow)
+                throw new Exception("BirthDate cannot be in the future");
+
+            var age = DateTimeOffset.UtcNow.Year - dto.BirthDate.Year;
+            if (dto.BirthDate.Date > DateTimeOffset.UtcNow.AddYears(-age).Date)
+                age--;
+
+            if (age is < 45 or > 120)
+                throw new Exception(age < 45
+                    ? "Invalid BirthDate (must be at least 45 years old)"
+                    : "Age cannot exceed 120 years");
+
             _mapper.Map(dto, user);
+
+            if (user.Addresses.Any())
+            {
+                _addressRepo.DeleteRange(user.Addresses);
+                user.Addresses.Clear();
+            }
+
+            user.UserCategories.Clear();
+
+            foreach (var catId in dto.CategoryValueIds)
+            {
+                user.UserCategories.Add(new UserCategoryValue
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    ValueId = GuidHelper.ParseOrThrow(catId, nameof(catId)),
+                });
+            }
+
+            if (dto.Addresses != null && dto.Addresses.Any())
+            {
+                var newAddresses = _mapper.Map<List<Address>>(dto.Addresses);
+
+                var provinceIds = await _provineRepo.Get().Select(p => p.ProvinceID).ToListAsync();
+                var districtIds = await _districtRepo.Get().Select(d => d.DistrictID).ToListAsync();
+                var wardCodes = await _warRepo.Get().Select(w => w.WardCode).ToListAsync();
+
+                foreach (var address in newAddresses)
+                {
+                    if (!provinceIds.Contains(address.ProvinceID))
+                        throw new Exception($"ProvinceID {address.ProvinceID} does not exist");
+
+                    if (!districtIds.Contains(address.DistrictID))
+                        throw new Exception($"DistrictID {address.DistrictID} does not exist");
+
+                    if (!wardCodes.Contains(address.WardCode))
+                        throw new Exception($"WardCode {address.WardCode} does not exist");
+
+                    address.UserId = user.Id;
+                }
+
+                user.Addresses = newAddresses;
+            }
 
             _repository.Update(user);
             await _repository.SaveChangesAsync();

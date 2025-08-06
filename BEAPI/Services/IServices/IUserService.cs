@@ -1,5 +1,5 @@
-﻿using BEAPI.Dtos.Auth;
-using BEAPI.Dtos.Common;
+﻿using BEAPI.Dtos.Common;
+using BEAPI.Dtos.Elder;
 using BEAPI.Dtos.User;
 
 namespace BEAPI.Services.IServices

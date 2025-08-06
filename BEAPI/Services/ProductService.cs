@@ -186,8 +186,10 @@ namespace BEAPI.Services
             if (!string.IsNullOrWhiteSpace(dto.Keyword))
                 query = query.Where(p => p.Name.Contains(dto.Keyword) || p.Brand.Contains(dto.Keyword));
 
-            if (dto.CategoryId.HasValue)
-                query = query.Where(p => p.ProductCategoryValues.Any(c => c.ValueId == dto.CategoryId.Value));
+            if(dto.CategoryIds != null && dto.CategoryIds.Any())
+{
+                query = query.Where(p => p.ProductCategoryValues.Any(pc => dto.CategoryIds.Contains(pc.ValueId)));
+            }
 
             if (dto.MinPrice.HasValue)
                 query = query.Where(p => p.ProductVariants

@@ -4,6 +4,7 @@ using BEAPI.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BEAPI.Migrations
 {
     [DbContext(typeof(BeContext))]
-    partial class BeContextModelSnapshot : ModelSnapshot
+    [Migration("20250806133800_Usercategori")]
+    partial class Usercategori
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -92,7 +95,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Addresses", (string)null);
+                    b.ToTable("Addresses");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.Cart", b =>
@@ -142,7 +145,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("ElderId");
 
-                    b.ToTable("Carts", (string)null);
+                    b.ToTable("Carts");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.CartItem", b =>
@@ -195,7 +198,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("CartItems", (string)null);
+                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.District", b =>
@@ -253,7 +256,7 @@ namespace BEAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Districts", (string)null);
+                    b.ToTable("Districts");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.ListOfValue", b =>
@@ -301,7 +304,7 @@ namespace BEAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ListOfValues", (string)null);
+                    b.ToTable("ListOfValues");
 
                     b.HasData(
                         new
@@ -415,7 +418,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("ElderId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.OrderDetail", b =>
@@ -472,7 +475,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("OrderDetails", (string)null);
+                    b.ToTable("OrderDetails");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.PaymentHistory", b =>
@@ -533,7 +536,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("UserId1");
 
-                    b.ToTable("PaymentHistories", (string)null);
+                    b.ToTable("PaymentHistories");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.Product", b =>
@@ -600,7 +603,7 @@ namespace BEAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.ProductCategoryValue", b =>
@@ -647,7 +650,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("ValueId");
 
-                    b.ToTable("ProductCategoryValue", (string)null);
+                    b.ToTable("ProductCategoryValue");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.ProductImage", b =>
@@ -693,7 +696,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("ProductImages", (string)null);
+                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.ProductVariant", b =>
@@ -747,7 +750,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductVariants", (string)null);
+                    b.ToTable("ProductVariants");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.ProductVariantValue", b =>
@@ -794,7 +797,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("ValueId");
 
-                    b.ToTable("ProductVariantValues", (string)null);
+                    b.ToTable("ProductVariantValues");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.Province", b =>
@@ -843,7 +846,7 @@ namespace BEAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Provinces", (string)null);
+                    b.ToTable("Provinces");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.Role", b =>
@@ -884,7 +887,7 @@ namespace BEAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
 
                     b.HasData(
                         new
@@ -1023,7 +1026,7 @@ namespace BEAPI.Migrations
                         .IsUnique()
                         .HasFilter("[UserName] IS NOT NULL");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
 
                     b.HasData(
                         new
@@ -1121,7 +1124,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("ValueId");
 
-                    b.ToTable("UserCategoryValue", (string)null);
+                    b.ToTable("UserCategoryValue");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.Value", b =>
@@ -1183,7 +1186,7 @@ namespace BEAPI.Migrations
 
                     b.HasIndex("ListOfValueId");
 
-                    b.ToTable("Values", (string)null);
+                    b.ToTable("Values");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.Ward", b =>
@@ -1233,7 +1236,7 @@ namespace BEAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Wards", (string)null);
+                    b.ToTable("Wards");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.Address", b =>

@@ -1,8 +1,9 @@
-﻿using BEAPI.Entities.Enum;
+﻿using BEAPI.Dtos.Addreess;
+using BEAPI.Entities.Enum;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace BEAPI.Dtos.Auth
+namespace BEAPI.Dtos.Elder
 {
     public class ElderRegisterDto
     {
@@ -17,5 +18,7 @@ namespace BEAPI.Dtos.Auth
         public string? EmergencyPhoneNumber { get; set; }
         public string? RelationShip { get; set; }
         public Gender Gender { get; set; }
+        public List<string> CategoryValueIds { get; set; } = new();
+        public List<CreateAddressDto> Addresses { get; set; } = new();
     }
 }

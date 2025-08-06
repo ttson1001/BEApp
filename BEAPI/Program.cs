@@ -110,7 +110,6 @@ app.MapControllers();
 
 app.Run();
 
-
 void EnsureMigrate(WebApplication webApp)
 {
     using var scope = webApp.Services.CreateScope();

@@ -1,4 +1,7 @@
-﻿namespace BEAPI.Dtos.Elder
+﻿using BEAPI.Dtos.Addreess;
+using BEAPI.Dtos.Value;
+
+namespace BEAPI.Dtos.Elder
 {
     public class ElderDto
     {
@@ -13,5 +16,7 @@
         public bool IsDelete { get; set;}
         public string? Avatar { get; set; }
         public int Gender { get; set; }
+        public List<AddressDto> Addresses { get; set; } = new();
+        public List<ValueDto> Categories { get; set; } = new();
     }
 }

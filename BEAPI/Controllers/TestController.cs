@@ -23,7 +23,7 @@ namespace BEAPI.Controllers
 
         [Authorize(Roles = UserContanst.UserRole)]
         [HttpPost("[action]")]
-        public async Task<IActionResult> CreateElder([FromBody] OrderCreateDto orderCreateDto)
+        public async Task<IActionResult> CreateOrder([FromBody] OrderCreateDto orderCreateDto)
         {
             try
             {
