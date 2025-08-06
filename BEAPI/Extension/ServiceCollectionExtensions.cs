@@ -27,6 +27,7 @@ namespace BEAPI.Extension
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IStatisticService, StatisticService>();
             services.AddScoped<IProductPropertySerivce, ProductPropertyService>();
+            services.AddScoped<IElderService, ElderService>();
             services.AddScoped<VNPayService>();
         }
     }

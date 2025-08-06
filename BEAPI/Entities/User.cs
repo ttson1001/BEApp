@@ -1,5 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BEAPI.Entities.Enum;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Numerics;
 
 namespace BEAPI.Entities
 {
@@ -20,8 +23,12 @@ namespace BEAPI.Entities
         [MaxLength(256)]
         public string? Email { get; set; }
         [MaxLength(20)]
-        public string? Avatar { get; set; } 
-        public string? Gender { get; set; }
+        public string? Avatar { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? Spendlimit { get; set; }
+        public string? EmergencyPhoneNumber { get; set; }
+        public Gender? Gender { get; set; }
+        public string? RelationShip { get; set; }
         public int Age { get; set; }
         [MaxLength(2000)]
         public string? Description { get; set; }

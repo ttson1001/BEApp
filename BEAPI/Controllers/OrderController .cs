@@ -1,6 +1,9 @@
 ﻿using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Order;
+using BEAPI.Entities;
+using BEAPI.Helper;
 using BEAPI.PaymentService.VnPay;
+using BEAPI.Services;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 
@@ -66,5 +69,35 @@ namespace BEAPI.Controllers
                 </body>
             </html>", "text/html");
         }
+
+        [HttpGet("user")]
+        public async Task<IActionResult> GetOrdersByUser()
+        {
+            try
+            {
+                var userId = User.GetUserId();
+                var orders = await _service.GetOrdersByCustomerIdAsync(userId);
+                return Ok(new { message = "Get order successfully", data = orders });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> SearchOrders([FromBody] OrderFilterDto request)
+        {
+            try
+            {
+                var result = await _service.FilterOrdersAsync(request);
+                return Ok(new { message = "Get order successfully", data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
     }
 }
