@@ -6,6 +6,7 @@ using BEAPI.Exceptions;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MimeKit;
 
 namespace BEAPI.Controllers
 {
@@ -92,8 +93,20 @@ namespace BEAPI.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> SearchUsers([FromBody] UserFilterDto request)
         {
-            var result = await _userService.FilterUsersAsync(request);
-            return Ok(new ResponseDto { Data = result, Message = "Filter successful" });
+            
+            try
+            {
+                var result = await _userService.FilterUsersAsync(request);
+                return Ok(new ResponseDto { Data = result, Message = "Filter successful" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Message = ex.Message,
+                    Data = null
+                });
+            }
         }
 
 

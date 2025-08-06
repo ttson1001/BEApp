@@ -33,12 +33,11 @@ namespace BEAPI.Controllers
         {
             var vnpayData = Request.Query;
             var vnp_ResponseCode = vnpayData["vnp_ResponseCode"];
-            var vnp_TxnRef = vnpayData["vnp_TxnRef"];
-            var cartIdStr = vnpayData["cartId"];
+            var vnp_TxnRef = vnpayData["vnp_OrderInfo"];
 
             var dto = new OrderCreateDto
             {
-                CartId = cartIdStr,
+                CartId = vnp_TxnRef,
                 Note = $"VNPay Transaction: {vnp_TxnRef}"
             };
 

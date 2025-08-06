@@ -26,6 +26,7 @@ namespace BEAPI.Extension
             services.AddScoped<IBrandService, BrandService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IStatisticService, StatisticService>();
+            services.AddScoped<IProductPropertySerivce, ProductPropertyService>();
             services.AddScoped<VNPayService>();
         }
     }

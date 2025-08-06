@@ -55,8 +55,8 @@ namespace BEAPI.Services
                 Quantity = x.Quantity,
                 ProductName = x.ProductVariant.Product.Name ?? "",
             }).ToList();
-
-            cart.Status = CartStatus.Approve;
+            
+            cart.Status = isPaid ? CartStatus.Approve : CartStatus.Pending;
 
             await _orderRepo.AddAsync(order);
             await _orderRepo.SaveChangesAsync();

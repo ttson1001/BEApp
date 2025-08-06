@@ -29,11 +29,10 @@ namespace BEAPI.PaymentService.VnPay
             vnpay.AddRequestData("vnp_CurrCode", "VND");
             vnpay.AddRequestData("vnp_IpAddr", Utils.GetIpAddress(context));
             vnpay.AddRequestData("vnp_Locale", "vn");
-            vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang: " + vnPayRequest.CartId);
+            vnpay.AddRequestData("vnp_OrderInfo", vnPayRequest.CartId);
             vnpay.AddRequestData("vnp_OrderType", "other");
             vnpay.AddRequestData("vnp_ReturnUrl", _settings.ReturnUrl);
             vnpay.AddRequestData("vnp_TxnRef", orderId.ToString());
-            vnpay.AddRequestData("cartId", vnPayRequest.CartId.ToString());
 
             string paymentUrl = vnpay.CreateRequestUrl(_settings.BaseUrl, _settings.HashSecret);
             return paymentUrl;
