@@ -143,8 +143,6 @@ namespace BEAPI.Services
             var value = await _valueRepo.Get().FirstOrDefaultAsync(x => x.Id == valueId)
                          ?? throw new Exception("Category not found");
 
-
-
             if (string.IsNullOrWhiteSpace(linkCategoryDto.SubCategoryId))
             {
                 value.ChildListOfValueId = null;
@@ -163,8 +161,9 @@ namespace BEAPI.Services
             if (root.Note == "CATEGORY")
                 throw new Exception("Don't link root category");
 
-            if (await HasCircularReference(value.Id, sublistCategoryId))
+            if (await HasCircularReference(value.ListOfValueId, sublistCategoryId))
                 throw new Exception("Circular reference detected. Cannot link category.");
+
 
             value.ChildListOfValueId = sublistCategoryId;
             await _valueRepo.SaveChangesAsync();
@@ -213,21 +212,43 @@ namespace BEAPI.Services
             return _mapper.Map<List<ListOfValueDto>>(listCaterory);
         }
 
-        private async Task<bool> HasCircularReference(Guid parentId, Guid childId)
+        private async Task<bool> HasCircularReference(Guid sourceListOfValueId, Guid? targetListOfValueId)
         {
-            var current = await _valueRepo.Get().FirstOrDefaultAsync(x => x.Id == childId);
+            if (targetListOfValueId == null)
+                return false;
 
-            while (current != null)
+            var visited = new HashSet<Guid>();
+            var toVisit = new Queue<Guid>();
+            toVisit.Enqueue(targetListOfValueId.Value);
+
+            while (toVisit.Count > 0)
             {
-                if (current.ChildListOfValueId == null)
-                    return false;
+                var currentListId = toVisit.Dequeue();
 
-                if (current.ChildListOfValueId == parentId)
+                // ✅ Nếu đã duyệt qua rồi thì bỏ qua (chặn vòng lặp)
+                if (!visited.Add(currentListId))
+                    continue;
+
+                // ✅ Nếu vòng tròn xảy ra
+                if (currentListId == sourceListOfValueId)
                     return true;
-                current = await _valueRepo.Get().FirstOrDefaultAsync(x => x.Id == current.ChildListOfValueId);
+
+                // ✅ Truy vấn tất cả các Value trong List hiện tại mà có liên kết tới list khác
+                var values = await _valueRepo.Get()
+                    .Where(v => v.ListOfValueId == currentListId && v.ChildListOfValueId != null)
+                    .ToListAsync();
+
+                foreach (var value in values)
+                {
+                    if (value.ChildListOfValueId.HasValue)
+                        toVisit.Enqueue(value.ChildListOfValueId.Value);
+                }
             }
 
             return false;
         }
+
+
+
     }
 }
