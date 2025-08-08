@@ -140,13 +140,26 @@ namespace BEAPI.Services
         public async Task LinkSubCategory(LinkCategoryDto linkCategoryDto)
         {
             var valueId = GuidHelper.ParseOrThrow(linkCategoryDto.CategoryId, nameof(linkCategoryDto.CategoryId));
-            var value = await _valueRepo.Get().FirstOrDefaultAsync(x => x.Id == valueId) ?? throw new Exception("Category not found");
-            var sublistCategoryId = GuidHelper.ParseOrThrow(linkCategoryDto.SubCategoryId, nameof(linkCategoryDto.SubCategoryId));
-            var root = await _repository.Get().FirstOrDefaultAsync(x => x.Id == sublistCategoryId) ?? throw new Exception("Sublist category not found");
-            if (root.Note == "CATEGORY")
+            var value = await _valueRepo.Get().FirstOrDefaultAsync(x => x.Id == valueId)
+                         ?? throw new Exception("Category not found");
+
+            if (string.IsNullOrWhiteSpace(linkCategoryDto.SubCategoryId))
             {
-                throw new Exception("Don't not link category root");
+                value.ChildListOfValueId = null;
+                await _valueRepo.SaveChangesAsync();
+                return;
             }
+
+            var sublistCategoryId = GuidHelper.ParseOrThrow(linkCategoryDto.SubCategoryId, nameof(linkCategoryDto.SubCategoryId));
+            var root = await _repository.Get().FirstOrDefaultAsync(x => x.Id == sublistCategoryId)
+                         ?? throw new Exception("Sublist category not found");
+
+            if (root.Note == "CATEGORY")
+                throw new Exception("Don't link root category");
+
+            if (await HasCircularReference(value.Id, sublistCategoryId))
+                throw new Exception("Circular reference detected. Cannot link category.");
+
             value.ChildListOfValueId = sublistCategoryId;
             await _valueRepo.SaveChangesAsync();
         }
@@ -192,6 +205,23 @@ namespace BEAPI.Services
             var listCaterory = await _repository.Get().Where(x => x.Type == Entities.Enum.MyValueType.Category).ToListAsync();
 
             return _mapper.Map<List<ListOfValueDto>>(listCaterory);
+        }
+
+        private async Task<bool> HasCircularReference(Guid parentId, Guid childId)
+        {
+            var current = await _valueRepo.Get().FirstOrDefaultAsync(x => x.Id == childId);
+            while (current != null)
+            {
+                if (current.ChildListOfValueId == null)
+                    return false;
+
+                if (current.ChildListOfValueId == parentId)
+                    return true;
+
+                current = await _valueRepo.Get().FirstOrDefaultAsync(x => x.Id == current.ChildListOfValueId);
+            }
+
+            return false;
         }
     }
 }

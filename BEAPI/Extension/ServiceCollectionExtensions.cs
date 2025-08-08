@@ -29,6 +29,7 @@ namespace BEAPI.Extension
             services.AddScoped<IProductPropertySerivce, ProductPropertyService>();
             services.AddScoped<IRelationShipService, RelationShipService>();
             services.AddScoped<IElderService, ElderService>();
+            services.AddScoped<IMedicalReportService, MedicalReportService>();
             services.AddScoped<VNPayService>();
         }
     }

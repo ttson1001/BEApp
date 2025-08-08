@@ -51,7 +51,7 @@ namespace BEAPI.Controllers
 
         [Authorize]
         [HttpGet("[action]")]
-        public async Task<IActionResult> GetElderByCusId()
+        public async Task<IActionResult> GetMyElders()
         {
             try
             {

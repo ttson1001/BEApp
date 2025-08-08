@@ -118,6 +118,24 @@ namespace BEAPI.Services
             await _userRepo.SaveChangesAsync();
         }
 
+        public async Task BanOrUnbanUserAsync(string userId)
+        {
+            var guidUser = GuidHelper.ParseOrThrow(userId, nameof(userId));
+
+            var user = await _userRepo.Get()
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == guidUser)
+                ?? throw new Exception("User not found");
+
+            if (user.Role?.Name == "Admin")
+                throw new Exception("You cannot ban an Admin user.");
+
+            if (user.IsDeleted)
+                throw new Exception("User is already banned.");
+
+            user.IsDeleted = !user.IsDeleted;
+            await _userRepo.SaveChangesAsync();
+        }
 
         public async Task<PagedResult<UserListDto>> FilterUsersAsync(UserFilterDto request)
         {
@@ -128,7 +146,8 @@ namespace BEAPI.Services
                 query = query.Where(u =>
                     u.FullName.Contains(request.SearchTerm) ||
                     u.UserName.Contains(request.SearchTerm) ||
-                    u.Email.Contains(request.SearchTerm));
+                    u.Email.Contains(request.SearchTerm) || 
+                    u.PhoneNumber.Contains(request.SearchTerm));
             }
 
             if (!string.IsNullOrWhiteSpace(request.RoleId))

@@ -4,6 +4,7 @@ using BEAPI.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BEAPI.Migrations
 {
     [DbContext(typeof(BeContext))]
-    partial class BeContextModelSnapshot : ModelSnapshot
+    [Migration("20250807180510_addReportWalletFeedback")]
+    partial class addReportWalletFeedback
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -394,15 +397,6 @@ namespace BEAPI.Migrations
                             Label = "Mối quan hệ",
                             Note = "RELATIONSHIP",
                             Type = 3
-                        },
-                        new
-                        {
-                            Id = new Guid("e12abcde-1234-4567-89ab-08dcb9a3cdef"),
-                            CreationDate = new DateTimeOffset(new DateTime(2025, 8, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            IsDeleted = false,
-                            Label = "Loại bệnh án",
-                            Note = "MEDICAL_REPORT_TYPE",
-                            Type = 4
                         });
                 });
 
@@ -1033,24 +1027,6 @@ namespace BEAPI.Migrations
                             Id = new Guid("33333333-3333-3333-3333-333333333333"),
                             IsDeleted = false,
                             Name = "Admin"
-                        },
-                        new
-                        {
-                            Id = new Guid("44444444-4444-4444-4444-444444444444"),
-                            IsDeleted = false,
-                            Name = "Consultant"
-                        },
-                        new
-                        {
-                            Id = new Guid("55555555-5555-5555-5555-555555555555"),
-                            IsDeleted = false,
-                            Name = "ShopManager"
-                        },
-                        new
-                        {
-                            Id = new Guid("66666666-6666-6666-6666-666666666666"),
-                            IsDeleted = false,
-                            Name = "Staff"
                         });
                 });
 

@@ -9,6 +9,7 @@ namespace BEAPI.Services.IServices
         Task<List<ProductDto>> GetAll();
         Task<ProductDto> GetById(string productId);
         Task<PagedResult<ProductListDto>> SearchAsync(ProductSearchDto dto);
+        Task<PagedResult<ProductListDto>> SearchProductActiveAsync(ProductSearchDto dto);
         Task Update(ProductCreateDto dto, string id);
     }
 }

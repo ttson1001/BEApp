@@ -8,5 +8,6 @@
         public string? PhoneNumber { get; set; }
         public string? RoleName { get; set; }
         public bool IsVerified { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

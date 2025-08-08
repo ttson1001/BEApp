@@ -3,6 +3,7 @@
     public class VnPayRequest
     {
         public string CartId { get; set; }
-        public decimal Amount { get; set; }
+        public string AddressId { get; set; }
+        public string Note { get; set; }
     }
 }

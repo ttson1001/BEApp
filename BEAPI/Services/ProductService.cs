@@ -252,5 +252,85 @@ namespace BEAPI.Services
                 Items = items
             };
         }
+
+        public async Task<PagedResult<ProductListDto>> SearchProductActiveAsync(ProductSearchDto dto)
+        {
+            var query = _productRepo.Get()
+                .Where(p => !p.IsDeleted)
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.ProductImages)
+                .Include(p => p.ProductCategoryValues)
+                    .ThenInclude(pcv => pcv.Value)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(dto.Keyword))
+                query = query.Where(p => p.Name.Contains(dto.Keyword) || p.Brand.Contains(dto.Keyword));
+
+            if(dto.CategoryIds != null && dto.CategoryIds.Any())
+{
+                query = query.Where(p => p.ProductCategoryValues.Any(pc => dto.CategoryIds.Contains(pc.ValueId)));
+            }
+
+            if (dto.MinPrice.HasValue)
+                query = query.Where(p => p.ProductVariants
+                    .OrderBy(v => v.CreationDate)
+                    .Select(v => v.Price)
+                    .FirstOrDefault() >= dto.MinPrice.Value);
+
+            if (dto.MaxPrice.HasValue)
+                query = query.Where(p => p.ProductVariants
+                    .OrderBy(v => v.CreationDate)
+                    .Select(v => v.Price)
+                    .FirstOrDefault() <= dto.MaxPrice.Value);
+
+            query = dto.SortBy.ToLower() switch
+            {
+                "name" => dto.SortDirection == "asc" ? query.OrderBy(p => p.Name) : query.OrderByDescending(p => p.Name),
+                "brand" => dto.SortDirection == "asc" ? query.OrderBy(p => p.Brand) : query.OrderByDescending(p => p.Brand),
+                "price" => dto.SortDirection == "asc"
+                    ? query.OrderBy(p => p.ProductVariants.OrderBy(v => v.CreationDate).Select(v => v.Price).FirstOrDefault())
+                    : query.OrderByDescending(p => p.ProductVariants.OrderBy(v => v.CreationDate).Select(v => v.Price).FirstOrDefault()),
+                _ => dto.SortDirection == "asc" ? query.OrderBy(p => p.CreationDate) : query.OrderByDescending(p => p.CreationDate)
+            };
+
+            var totalItems = await query.CountAsync();
+
+            var items = await query
+                .Skip((dto.Page - 1) * dto.PageSize)
+                .Take(dto.PageSize)
+                .Select(p => new ProductListDto
+                {
+                    Id = p.Id.ToString(),
+                    Name = p.Name,
+                    Brand = p.Brand,
+                    Price = p.ProductVariants
+                        .OrderBy(v => v.CreationDate)
+                        .Select(v => v.Price)
+                        .FirstOrDefault(),
+                    Description = p.Description,
+                    ImageUrl = p.ProductVariants
+                        .SelectMany(v => v.ProductImages)
+                        .OrderBy(img => img.CreationDate)
+                        .Select(img => img.URL)
+                        .FirstOrDefault(),
+                    Categories = p.ProductCategoryValues
+                        .Select(c => new ValueDto
+                        {
+                            Id = c.Value.Id.ToString(),
+                            Code = c.Value.Code,
+                            Label = c.Value.Label,
+                            Description = c.Value.Description
+                        }).ToList()
+                })
+                .ToListAsync();
+
+            return new PagedResult<ProductListDto>
+            {
+                TotalItems = totalItems,
+                Page = dto.Page,
+                PageSize = dto.PageSize,
+                Items = items
+            };
+        }
     }
 }

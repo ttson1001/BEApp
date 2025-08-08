@@ -71,7 +71,11 @@ namespace BEAPI.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            var response = new ResponseDto();
+            var response = new ResponseDto(); 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             try
             {
                 await _authService.RegisterAsync(dto);

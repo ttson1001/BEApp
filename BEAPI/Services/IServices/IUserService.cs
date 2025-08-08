@@ -11,5 +11,6 @@ namespace BEAPI.Services.IServices
         Task<(string Token, string QrBase64)> GenerateElderLoginQrAsync(Guid elderId);
         Task<PagedResult<UserListDto>> FilterUsersAsync(UserFilterDto request);
         Task CreateUserAsync(UserCreateDto dto);
+        Task BanOrUnbanUserAsync(string userId);
     }
 }

@@ -1,12 +1,9 @@
 ﻿using BEAPI.Constants;
 using BEAPI.Dtos.Common;
-using BEAPI.Dtos.Elder;
 using BEAPI.Dtos.User;
-using BEAPI.Exceptions;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MimeKit;
 
 namespace BEAPI.Controllers
 {
@@ -52,6 +49,28 @@ namespace BEAPI.Controllers
                     }
                 };
                 return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Message = ex.Message,
+                    Data = null
+                });
+            }
+        }
+
+        [HttpPut("{userId}/[action]")]
+        public async Task<IActionResult> BanOrUnbanUser(string userId)
+        {
+            try
+            {
+                await _userService.BanOrUnbanUserAsync(userId);
+                return Ok(new ResponseDto
+                {
+                    Message = "User status updated successfully.",
+                    Data = null
+                });
             }
             catch (Exception ex)
             {

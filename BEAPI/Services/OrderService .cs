@@ -16,12 +16,14 @@ namespace BEAPI.Services
         private readonly IRepository<ProductVariant> _productVariantRepo;
         private readonly IRepository<User> _userRepo;
         private readonly IRepository<Cart> _cartRepo;
+        private readonly IRepository<Address> _addressRepo;
         private readonly IMapper _mapper;
 
         public OrderService(IRepository<Order> orderRepo,
                             IRepository<ProductVariant> productVariantRepo,
                             IRepository<User> userRepo,
                             IRepository<Cart> cartRepo,
+                            IRepository<Address> addressRepo,
                             IMapper mapper)
         {
             _orderRepo = orderRepo;
@@ -29,6 +31,7 @@ namespace BEAPI.Services
             _userRepo = userRepo;
             _cartRepo = cartRepo;
             _mapper = mapper;
+            _addressRepo = addressRepo;
         }
 
         public async Task CreateOrderAsync(OrderCreateDto dto, bool isPaid)
@@ -49,7 +52,11 @@ namespace BEAPI.Services
                 Quantity = x.Quantity,
                 ProductName = x.ProductVariant.Product.Name ?? "",
             }).ToList();
-
+            var address = _addressRepo.Get().First();
+            if (isPaid)
+            {
+                DeductStockFromCart(cart);
+            }
             var order = new Order
             {
                 CustomerId = cart.CustomerId,
@@ -58,6 +65,12 @@ namespace BEAPI.Services
                 OrderStatus = isPaid ? OrderStatus.Paid : OrderStatus.Fail,
                 TotalPrice = price,
                 OrderDetails = orderDetails,
+                DistrictID = address.DistrictID,
+                DistrictName = address.DistrictName,
+                WardCode = address.WardCode,
+                WardName = address.WardName,
+                ProvinceID = address.ProvinceID,
+                ProvinceName = address.ProvinceName
             };
 
             cart.Status = isPaid ? CartStatus.Approve : CartStatus.Pending;
@@ -65,6 +78,28 @@ namespace BEAPI.Services
             await _orderRepo.AddAsync(order);
             await _orderRepo.SaveChangesAsync();
         }
+
+        private void DeductStockFromCart(Cart cart)
+        {
+            foreach (var item in cart.Items)
+            {
+                var variant = item.ProductVariant;
+
+                if (variant.Stock < item.Quantity)
+                {
+                    var productName = variant.Product?.Name ?? "Unknown";
+                    throw new Exception($"Not enough stock for product: {productName}");
+                }
+
+                variant.Stock -= item.Quantity;
+
+                if (variant.Stock == 0)
+                {
+                    variant.IsDeleted = true;
+                }
+            }
+        }
+
 
         public async Task<List<OrderDto>> GetOrdersByCustomerIdAsync(string userId)
         {

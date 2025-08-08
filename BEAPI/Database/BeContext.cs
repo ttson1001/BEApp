@@ -23,7 +23,9 @@ namespace BEAPI.Database
         public DbSet<ProductVariant> ProductVariants { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<ProductVariantValue> ProductVariantValues { get; set; }
-
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<Feedback> Feedbacks { get; set; }
+        public DbSet<Wallet> Wallets { get; set; }
         public BeContext(DbContextOptions<BeContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -65,10 +67,37 @@ namespace BEAPI.Database
                 .HasForeignKey(ph => ph.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Report>()
+                 .HasOne(r => r.User)
+                 .WithMany()
+                 .HasForeignKey(r => r.UserId)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Report>()
+                .HasOne(r => r.Consultant)
+                .WithMany()
+                .HasForeignKey(r => r.ConsultantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Feedback>()
+               .HasOne(r => r.User)
+               .WithMany()
+               .HasForeignKey(r => r.UserId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Feedback>()
+                .HasOne(r => r.Admin)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Role>().HasData(
                  new Role { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Guardian" },
                  new Role { Id = Guid.Parse("22222222-2222-2222-2222-222222222222"), Name = "Elder" },
-                 new Role { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), Name = "Admin" }
+                 new Role { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), Name = "Admin" },
+                 new Role { Id = Guid.Parse("44444444-4444-4444-4444-444444444444"), Name = "Consultant" },
+                 new Role { Id = Guid.Parse("55555555-5555-5555-5555-555555555555"), Name = "ShopManager" },
+                 new Role { Id = Guid.Parse("66666666-6666-6666-6666-666666666666"), Name = "Staff" }
             );
 
             modelBuilder.Entity<User>().HasData(
@@ -139,6 +168,13 @@ namespace BEAPI.Database
                     Label = "Mối quan hệ",
                     Note = "RELATIONSHIP",
                     Type = MyValueType.Relationship,
+                    CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
+                },new ListOfValue
+                {
+                    Id = Guid.Parse("e12abcde-1234-4567-89ab-08dcb9a3cdef"),
+                    Label = "Loại bệnh án",
+                    Note = "MEDICAL_REPORT_TYPE",
+                    Type = MyValueType.MedicalReport,
                     CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
                 }
             );

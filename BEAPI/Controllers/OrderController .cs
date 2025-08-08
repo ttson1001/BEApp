@@ -6,6 +6,7 @@ using BEAPI.PaymentService.VnPay;
 using BEAPI.Services;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace BEAPI.Controllers
 {
@@ -27,39 +28,57 @@ namespace BEAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult VnPay([FromBody] VnPayRequest vnPayRequest)
         {
-            var url = _vnPayService.VNPay(HttpContext, vnPayRequest);
-            return Ok(new { paymentUrl = url });
+            try
+            {
+                var result = _vnPayService.VNPay(HttpContext, vnPayRequest);
+                return Ok(new { message = "Vnpay successfully", data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> Return([FromServices] IOrderService orderService)
+        public async Task<IActionResult> Return()
         {
-            var vnpayData = Request.Query;
-            var vnp_ResponseCode = vnpayData["vnp_ResponseCode"];
-            var vnp_TxnRef = vnpayData["vnp_OrderInfo"];
-
-            var dto = new OrderCreateDto
+            try
             {
-                CartId = vnp_TxnRef,
-                Note = $"VNPay Transaction: {vnp_TxnRef}"
-            };
+                var vnpayData = Request.Query;
+                var vnp_ResponseCode = vnpayData["vnp_ResponseCode"];
+                var vnp_OrderInfo = vnpayData["vnp_OrderInfo"];
+                var orderInfoDecoded = WebUtility.UrlDecode(vnp_OrderInfo);
 
-            await orderService.CreateOrderAsync(dto, vnp_ResponseCode == "00");
+                var infoDict = orderInfoDecoded.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Split('='))
+                    .Where(x => x.Length == 2)
+                    .ToDictionary(x => x[0], x => x[1]);
 
-            if (vnp_ResponseCode == "00")
-            {
-                return Content($@"
+                var cartId = infoDict.GetValueOrDefault("CartId");
+                var addressId = infoDict.GetValueOrDefault("AddressId");
+                var note = infoDict.GetValueOrDefault("Note");
+                var dto = new OrderCreateDto
+                {
+                    CartId = cartId,
+                    AddressId = addressId,
+                    Note = note
+                };
+
+                await _service.CreateOrderAsync(dto, vnp_ResponseCode == "00");
+
+                if (vnp_ResponseCode == "00")
+                {
+                    return Content($@"
             <html>
                 <head><meta charset='UTF-8'></head>
                 <body>
                     <h2>🎉 Thanh toán thành công!</h2>
-                    <p>Mã giao dịch: {vnp_TxnRef}</p>
+                    <p>Mã giao dịch: {cartId}</p>
                     <a href='http://localhost:3000/'>Quay lại cửa hàng</a>
                 </body>
             </html>", "text/html");
-            }
-
-            return Content($@"
+                }
+                return Content($@"
             <html>
                 <head><meta charset='UTF-8'></head>
                 <body>
@@ -68,6 +87,11 @@ namespace BEAPI.Controllers
                     <a href='http://localhost:3000/'>Thử lại</a>
                 </body>
             </html>", "text/html");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("user")]

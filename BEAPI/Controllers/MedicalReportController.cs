@@ -7,24 +7,24 @@ namespace BEAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BrandController: ControllerBase
+    public class MedicalReportController : ControllerBase
     {
-        private readonly IBrandService _brandService;
+        private readonly IMedicalReportService _medicalReportService;
 
-        public BrandController(IBrandService brandService)
+        public MedicalReportController(IMedicalReportService medicalReportService)
         {
-            _brandService = brandService;
+            _medicalReportService = medicalReportService;
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> GetListValueBrand()
+        public async Task<IActionResult> GetListValueMedicalReport()
         {
             try
             {
-                var rs = await _brandService.GetListValueBrand();
+                var rs = await _medicalReportService.GetListValueMedicalReport();
                 return Ok(new ResponseDto
                 {
-                    Message = "Brand getlist successfully",
+                    Message = "MedicalReport getlist successfully",
                     Data = rs,
                 });
             }
@@ -39,14 +39,14 @@ namespace BEAPI.Controllers
         }
 
         [HttpPost("[action]")]
-        public async Task<IActionResult> CreateValueOfBrandRoot([FromBody] List<CreateCategoryValueDto> dtos)
+        public async Task<IActionResult> CreateListMedicalReport([FromBody] List<CreateCategoryValueDto> dtos)
         {
             try
             {
-                await _brandService.CreateListBrand(dtos);
+                await _medicalReportService.CreateListMedicalReport(dtos);
                 return Ok(new ResponseDto
                 {
-                    Message = "Brand created successfully"
+                    Message = "MedicalReport created successfully"
                 });
             }
             catch (Exception ex)

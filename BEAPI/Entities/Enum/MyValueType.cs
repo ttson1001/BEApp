@@ -6,5 +6,6 @@
         ProductProperty,
         Brand,
         Relationship,
+        MedicalReport
     }
 }

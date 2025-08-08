@@ -15,7 +15,7 @@ namespace BEAPI.Entities
         public Guid CustomerId { get; set; }
         public User Customer { get; set; }
         public string StreetAddress { get; set; } = string.Empty;
-        public long WardCode { get; set; }
+        public string WardCode { get; set; }
         public string WardName { get; set; } = string.Empty;
         public int DistrictID { get; set; }
         public string DistrictName { get; set; } = string.Empty;

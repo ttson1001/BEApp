@@ -46,7 +46,7 @@ namespace BEAPI.Services
 
         public async Task<string> LoginAsync(LoginDto dto)
         {
-            var user = await _userRepo.Get().Include(x => x.Role).FirstOrDefaultAsync(u => u.UserName == dto.UserName) ?? throw new KeyNotFoundException("User not found");
+            var user = await _userRepo.Get().Include(x => x.Role).FirstOrDefaultAsync(u => u.UserName == dto.UserName || u.Email == dto.UserName) ?? throw new KeyNotFoundException("User not found");
             if (!user.IsVerified)
             {
                 throw new Exception("Acount is not verify");
