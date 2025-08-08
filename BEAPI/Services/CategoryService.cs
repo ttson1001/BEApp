@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BEAPI.Services
 {
-    public class CategoryService: ICategoryService
+    public class CategoryService : ICategoryService
     {
         private readonly IRepository<ListOfValue> _repository;
         private readonly IRepository<Value> _valueRepo;
@@ -70,7 +70,7 @@ namespace BEAPI.Services
         {
             var listCaterory = await _repository.Get().Include(x => x.Values).ThenInclude(x => x.ChildListOfValue).Where(x => x.Type == Entities.Enum.MyValueType.Category).ToListAsync();
 
-            return _mapper.Map<List<ListOfValueDto>>(listCaterory); 
+            return _mapper.Map<List<ListOfValueDto>>(listCaterory);
         }
 
         public async Task<List<CategoryValueDto>> GetListValueCategoryById(string categoryId)
@@ -143,6 +143,8 @@ namespace BEAPI.Services
             var value = await _valueRepo.Get().FirstOrDefaultAsync(x => x.Id == valueId)
                          ?? throw new Exception("Category not found");
 
+
+
             if (string.IsNullOrWhiteSpace(linkCategoryDto.SubCategoryId))
             {
                 value.ChildListOfValueId = null;
@@ -151,8 +153,12 @@ namespace BEAPI.Services
             }
 
             var sublistCategoryId = GuidHelper.ParseOrThrow(linkCategoryDto.SubCategoryId, nameof(linkCategoryDto.SubCategoryId));
+            if (value.ListOfValueId == sublistCategoryId)
+            {
+                throw new Exception("Circular reference detected. Cannot link category.");
+            }
             var root = await _repository.Get().FirstOrDefaultAsync(x => x.Id == sublistCategoryId)
-                         ?? throw new Exception("Sublist category not found");
+                     ?? throw new Exception("Sublist category not found");
 
             if (root.Note == "CATEGORY")
                 throw new Exception("Don't link root category");
@@ -210,6 +216,7 @@ namespace BEAPI.Services
         private async Task<bool> HasCircularReference(Guid parentId, Guid childId)
         {
             var current = await _valueRepo.Get().FirstOrDefaultAsync(x => x.Id == childId);
+
             while (current != null)
             {
                 if (current.ChildListOfValueId == null)
@@ -217,7 +224,6 @@ namespace BEAPI.Services
 
                 if (current.ChildListOfValueId == parentId)
                     return true;
-
                 current = await _valueRepo.Get().FirstOrDefaultAsync(x => x.Id == current.ChildListOfValueId);
             }
 

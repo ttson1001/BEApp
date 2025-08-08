@@ -205,12 +205,12 @@ namespace BEAPI.Services
 
             query = dto.SortBy.ToLower() switch
             {
-                "name" => dto.SortDirection == "asc" ? query.OrderBy(p => p.Name) : query.OrderByDescending(p => p.Name),
-                "brand" => dto.SortDirection == "asc" ? query.OrderBy(p => p.Brand) : query.OrderByDescending(p => p.Brand),
-                "price" => dto.SortDirection == "asc"
+                "name" => dto.SortDirection ? query.OrderBy(p => p.Name) : query.OrderByDescending(p => p.Name),
+                "brand" => dto.SortDirection ? query.OrderBy(p => p.Brand) : query.OrderByDescending(p => p.Brand),
+                "price" => dto.SortDirection
                     ? query.OrderBy(p => p.ProductVariants.OrderBy(v => v.CreationDate).Select(v => v.Price).FirstOrDefault())
                     : query.OrderByDescending(p => p.ProductVariants.OrderBy(v => v.CreationDate).Select(v => v.Price).FirstOrDefault()),
-                _ => dto.SortDirection == "asc" ? query.OrderBy(p => p.CreationDate) : query.OrderByDescending(p => p.CreationDate)
+                _ => dto.SortDirection ? query.OrderBy(p => p.CreationDate) : query.OrderByDescending(p => p.CreationDate)
             };
 
             var totalItems = await query.CountAsync();
@@ -285,12 +285,12 @@ namespace BEAPI.Services
 
             query = dto.SortBy.ToLower() switch
             {
-                "name" => dto.SortDirection == "asc" ? query.OrderBy(p => p.Name) : query.OrderByDescending(p => p.Name),
-                "brand" => dto.SortDirection == "asc" ? query.OrderBy(p => p.Brand) : query.OrderByDescending(p => p.Brand),
-                "price" => dto.SortDirection == "asc"
+                "name" => dto.SortDirection ? query.OrderBy(p => p.Name) : query.OrderByDescending(p => p.Name),
+                "brand" => dto.SortDirection ? query.OrderBy(p => p.Brand) : query.OrderByDescending(p => p.Brand),
+                "price" => dto.SortDirection
                     ? query.OrderBy(p => p.ProductVariants.OrderBy(v => v.CreationDate).Select(v => v.Price).FirstOrDefault())
                     : query.OrderByDescending(p => p.ProductVariants.OrderBy(v => v.CreationDate).Select(v => v.Price).FirstOrDefault()),
-                _ => dto.SortDirection == "asc" ? query.OrderBy(p => p.CreationDate) : query.OrderByDescending(p => p.CreationDate)
+                _ => dto.SortDirection ? query.OrderBy(p => p.CreationDate) : query.OrderByDescending(p => p.CreationDate)
             };
 
             var totalItems = await query.CountAsync();
