@@ -80,6 +80,12 @@ namespace BEAPI.Services
             return _mapper.Map<List<CategoryValueDto>>(category.Values);
         }
 
+        public async Task<List<CategoryValueDto>> GetRootListValueCategory()
+        {
+            var category = await _repository.Get().Include(x => x.Values).ThenInclude(x => x.ChildListOfValue).Where(x => x.Note == "CATEGORY").FirstOrDefaultAsync() ?? throw new Exception("Category not found");
+            return _mapper.Map<List<CategoryValueDto>>(category.Values);
+        }
+
         public async Task<ListOfValueTreeDto> GetListOfValueTreeAsync()
         {
             var root = await _repository.Get()
@@ -247,8 +253,5 @@ namespace BEAPI.Services
 
             return false;
         }
-
-
-
     }
 }

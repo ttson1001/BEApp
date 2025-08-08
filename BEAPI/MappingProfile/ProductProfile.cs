@@ -15,6 +15,11 @@ namespace BEAPI.MappingProfile
                         src.ProductCategoryValues.Select(pc => pc.Value)))
                 .ForMember(d => d.Id, o => o.MapFrom(s => s.Id.ToString()));
 
+            CreateMap<Product, ProductWithTypeDto>()
+                .ForMember(dest => dest.Categories, opt => opt.MapFrom(src =>
+                        src.ProductCategoryValues.Select(pc => pc.Value)))
+                .ForMember(d => d.Id, o => o.MapFrom(s => s.Id.ToString()));
+
             CreateMap<ProductImageCreateDto, ProductImage>();
 
             CreateMap<ProductVariantCreateDto, ProductVariant>();

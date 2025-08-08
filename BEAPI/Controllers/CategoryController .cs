@@ -62,6 +62,28 @@ namespace BEAPI.Controllers
         }
 
         [HttpGet("[action]")]
+        public async Task<IActionResult> GetRootListValueCategory()
+        {
+            try
+            {
+                var rs = await _categoryService.GetRootListValueCategory();
+                return Ok(new ResponseDto
+                {
+                    Message = "Category getlist successfully",
+                    Data = rs
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("[action]")]
         public async Task<IActionResult> GetListCategoryNoValue()
         {
             try

@@ -11,5 +11,6 @@ namespace BEAPI.Services.IServices
         Task<PagedResult<ProductListDto>> SearchAsync(ProductSearchDto dto);
         Task<PagedResult<ProductListDto>> SearchProductActiveAsync(ProductSearchDto dto);
         Task Update(ProductCreateDto dto, string id);
+        Task<ProductWithTypeDto> GetWithStylesById(string productId);
     }
 }

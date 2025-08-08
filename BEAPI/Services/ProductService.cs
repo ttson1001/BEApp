@@ -139,6 +139,50 @@ namespace BEAPI.Services
             await _productRepo.AddAsync(entity);
             await _productRepo.SaveChangesAsync();
         }
+        public async Task<ProductWithTypeDto> GetWithStylesById(string productId)
+        {
+            var guidId = GuidHelper.ParseOrThrow(productId, nameof(productId));
+
+            var entity = await _productRepo.Get()
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.ProductImages)
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.ProductVariantValues)
+                        .ThenInclude(vv => vv.Value)
+                            .ThenInclude(v => v.ListOfValue)
+                .Include(p => p.ProductCategoryValues)
+                    .ThenInclude(x => x.Value)
+                .FirstOrDefaultAsync(x => x.Id == guidId)
+                ?? throw new Exception("Product not found");
+
+            var dto = _mapper.Map<ProductWithTypeDto>(entity);
+
+            var styles = entity.ProductVariants
+                .SelectMany(v => v.ProductVariantValues)
+                .GroupBy(pvv => new
+                {
+                    pvv.Value.ListOfValueId,
+                    pvv.Value.ListOfValue.Label
+                })
+                .Select(g => new ProductAttributeGroupDto
+                {
+                    ListOfValueId = g.Key.ListOfValueId,
+                    Label = g.Key.Label,
+                    Options = g
+                        .Select(x => new ProductAttributeValueDto
+                        {
+                            Id = x.Value.Id,
+                            Label = x.Value.Label
+                        })
+                        .DistinctBy(x => x.Id)
+                        .ToList()
+                })
+                .ToList();
+
+            dto.Styles = styles;
+
+            return dto;
+        }
 
 
         public async Task<List<ProductDto>> GetAll()

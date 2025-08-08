@@ -14,5 +14,6 @@ namespace BEAPI.Services.IServices
         Task<List<ListOfValueDto>> GetListCategoryNoValue();
         List<CategoryValueLeafWithPathDto> GetLeafNodesWithPaths(ListOfValueTreeDto tree);
         Task<List<CategoryValueDto>> GetListValueCategoryById(string categoryId);
+        Task<List<CategoryValueDto>> GetRootListValueCategory();
     }
 }

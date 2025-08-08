@@ -1,8 +1,7 @@
-﻿using BEAPI.Dtos.Value;
-
-namespace BEAPI.Dtos.Product
+﻿namespace BEAPI.Dtos.Product
 {
-    public class ProductDto
+    using BEAPI.Dtos.Value;
+    public class ProductWithTypeDto
     {
         public string Id { get; set; } = string.Empty;
         public string? Name { get; set; }
@@ -17,5 +16,6 @@ namespace BEAPI.Dtos.Product
         public DateTimeOffset? ExpirationDate { get; set; }
         public List<ValueDto> Categories { get; set; } = new();
         public List<ProductVariantDto> ProductVariants { get; set; } = new();
+        public List<ProductAttributeGroupDto> Styles { get; set; } = new();
     }
 }

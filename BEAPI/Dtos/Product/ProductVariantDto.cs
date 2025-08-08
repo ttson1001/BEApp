@@ -7,6 +7,7 @@
         public int Discount { get; set; }
         public long Stock { get; set; }
         public bool IsActive { get; set; }
+        public List<ProductImageDto> ProductImages { get; set; } = new();
         public List<ProductVariantValueDto> ProductVariantValues { get; set; } = new();
     }
 }
