@@ -10,6 +10,7 @@ namespace BEAPI.MappingProfile
 
             CreateMap<CreateAddressDto, Address>();
             CreateMap<Address, AddressDto>();
+            CreateMap<AddressDto, Address>();
         }
     }
 }

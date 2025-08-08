@@ -41,7 +41,8 @@ namespace BEAPI.Services
             var userId = GuidHelper.ParseOrThrow(dto.Id, nameof(dto.Id));
 
             var user = await _repository.Get()
-                .Include(u => u.Addresses)  
+                .Include(u => u.Addresses)
+                .Include(u => u.UserCategories)
                 .FirstOrDefaultAsync(u => u.Id == userId)
                 ?? throw new Exception("User not found");
 
@@ -59,12 +60,6 @@ namespace BEAPI.Services
 
             _mapper.Map(dto, user);
 
-            if (user.Addresses.Any())
-            {
-                _addressRepo.DeleteRange(user.Addresses);
-                user.Addresses.Clear();
-            }
-
             user.UserCategories.Clear();
 
             foreach (var catId in dto.CategoryValueIds)
@@ -77,15 +72,48 @@ namespace BEAPI.Services
                 });
             }
 
-            if (dto.Addresses != null && dto.Addresses.Any())
+            if (dto.Addresses != null)
             {
-                var newAddresses = _mapper.Map<List<Address>>(dto.Addresses);
+                var dtoAddressList = _mapper.Map<List<Address>>(dto.Addresses);
 
                 var provinceIds = await _provineRepo.Get().Select(p => p.ProvinceID).ToListAsync();
                 var districtIds = await _districtRepo.Get().Select(d => d.DistrictID).ToListAsync();
                 var wardCodes = await _warRepo.Get().Select(w => w.WardCode).ToListAsync();
 
-                foreach (var address in newAddresses)
+                var dtoIds = dtoAddressList.Select(a => a.Id).ToHashSet();
+                var existingAddresses = user.Addresses.ToList();
+
+                var toDelete = existingAddresses.Where(e => !dtoIds.Contains(e.Id)).ToList();
+                if (toDelete.Any())
+                    _addressRepo.DeleteRange(toDelete);
+
+                foreach (var existing in existingAddresses.Where(e => dtoIds.Contains(e.Id)))
+                {
+                    var dtoAddr = dtoAddressList.First(a => a.Id == existing.Id);
+
+                    if (!provinceIds.Contains(dtoAddr.ProvinceID))
+                        throw new Exception($"ProvinceID {dtoAddr.ProvinceID} does not exist");
+
+                    if (!districtIds.Contains(dtoAddr.DistrictID))
+                        throw new Exception($"DistrictID {dtoAddr.DistrictID} does not exist");
+
+                    if (!wardCodes.Contains(dtoAddr.WardCode))
+                        throw new Exception($"WardCode {dtoAddr.WardCode} does not exist");
+
+                    existing.StreetAddress = dtoAddr.StreetAddress;
+                    existing.WardCode = dtoAddr.WardCode;
+                    existing.WardName = dtoAddr.WardName;
+                    existing.DistrictID = dtoAddr.DistrictID;
+                    existing.DistrictName = dtoAddr.DistrictName;
+                    existing.ProvinceID = dtoAddr.ProvinceID;
+                    existing.ProvinceName = dtoAddr.ProvinceName;
+                    existing.PhoneNumber = dtoAddr.PhoneNumber;
+                }
+
+                var existingIds = existingAddresses.Select(e => e.Id).ToHashSet();
+                var toAdd = dtoAddressList.Where(a => !existingIds.Contains(a.Id) || a.Id == Guid.Empty).ToList();
+
+                foreach (var address in toAdd)
                 {
                     if (!provinceIds.Contains(address.ProvinceID))
                         throw new Exception($"ProvinceID {address.ProvinceID} does not exist");
@@ -96,10 +124,11 @@ namespace BEAPI.Services
                     if (!wardCodes.Contains(address.WardCode))
                         throw new Exception($"WardCode {address.WardCode} does not exist");
 
+                    address.Id = Guid.NewGuid();
                     address.UserId = user.Id;
-                }
 
-                user.Addresses = newAddresses;
+                   await _addressRepo.AddAsync(address);
+                }
             }
 
             _repository.Update(user);
