@@ -4,6 +4,7 @@ using BEAPI.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BEAPI.Migrations
 {
     [DbContext(typeof(BeContext))]
-    partial class BeContextModelSnapshot : ModelSnapshot
+    [Migration("20250808181812_RewardPoint")]
+    partial class RewardPoint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -262,7 +265,7 @@ namespace BEAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("AdminId")
+                    b.Property<Guid>("AdminId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("CreatedById")
@@ -292,15 +295,6 @@ namespace BEAPI.Migrations
 
                     b.Property<DateTimeOffset?>("ModificationDate")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset?>("RespondedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("ResponseAttachment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ResponseMessage")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -880,71 +874,6 @@ namespace BEAPI.Migrations
                     b.ToTable("ProductVariantValues");
                 });
 
-            modelBuilder.Entity("BEAPI.Entities.Promotion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("ApplicableProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CreatedById")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("CreationDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("DeleteById")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("DeletionDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("DiscountPercent")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset?>("EndAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid?>("ModificationById")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("ModificationDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("RequiredPoints")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<DateTimeOffset?>("StartAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IsActive");
-
-                    b.ToTable("Promotion");
-                });
-
             modelBuilder.Entity("BEAPI.Entities.Province", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1351,59 +1280,6 @@ namespace BEAPI.Migrations
                     b.ToTable("UserCategoryValue");
                 });
 
-            modelBuilder.Entity("BEAPI.Entities.UserPromotion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CreatedById")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("CreationDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("DeleteById")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("DeletionDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid?>("ModificationById")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("ModificationDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("PromotionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<DateTimeOffset?>("UsedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PromotionId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserPromotion");
-                });
-
             modelBuilder.Entity("BEAPI.Entities.Value", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1800,25 +1676,6 @@ namespace BEAPI.Migrations
                     b.Navigation("Value");
                 });
 
-            modelBuilder.Entity("BEAPI.Entities.UserPromotion", b =>
-                {
-                    b.HasOne("BEAPI.Entities.Promotion", "Promotion")
-                        .WithMany("UserPromotions")
-                        .HasForeignKey("PromotionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("BEAPI.Entities.User", "User")
-                        .WithMany("UserPromotions")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Promotion");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("BEAPI.Entities.Value", b =>
                 {
                     b.HasOne("BEAPI.Entities.ListOfValue", "ChildListOfValue")
@@ -1877,11 +1734,6 @@ namespace BEAPI.Migrations
                     b.Navigation("ProductVariantValues");
                 });
 
-            modelBuilder.Entity("BEAPI.Entities.Promotion", b =>
-                {
-                    b.Navigation("UserPromotions");
-                });
-
             modelBuilder.Entity("BEAPI.Entities.Role", b =>
                 {
                     b.Navigation("Users");
@@ -1896,8 +1748,6 @@ namespace BEAPI.Migrations
                     b.Navigation("PaymentHistory");
 
                     b.Navigation("UserCategories");
-
-                    b.Navigation("UserPromotions");
                 });
 
             modelBuilder.Entity("BEAPI.Entities.Value", b =>

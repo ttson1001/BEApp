@@ -2,10 +2,10 @@
 using BEAPI.Constants;
 using BEAPI.Dtos.Auth;
 using BEAPI.Dtos.Elder;
+using BEAPI.Dtos.Promotion;
 using BEAPI.Dtos.User;
 using BEAPI.Entities;
 using BEAPI.Entities.Enum;
-using Org.BouncyCastle.Crypto.Generators;
 
 namespace BEAPI.MappingProfile
 {
@@ -57,6 +57,21 @@ namespace BEAPI.MappingProfile
                 .ForMember(dest => dest.Addresses, opt => opt.Ignore())
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
 
+            CreateMap<UserPromotion, UserPromotionItemDto>()
+                .ForMember(d => d.UserPromotionId, o => o.MapFrom(s => s.Id))
+                .ForMember(d => d.PromotionId, o => o.MapFrom(s => s.PromotionId))
+                .ForMember(d => d.Title, o => o.MapFrom(s => s.Promotion.Title))
+                .ForMember(d => d.DiscountPercent, o => o.MapFrom(s => s.Promotion.DiscountPercent))
+                .ForMember(d => d.StartAt, o => o.MapFrom(s => s.Promotion.StartAt))
+                .ForMember(d => d.EndAt, o => o.MapFrom(s => s.Promotion.EndAt));
+
+            CreateMap<User, UserDetailDto>()
+                .ForMember(d => d.RoleName, o => o.MapFrom(s => s.Role != null ? s.Role.Name : null))
+                .ForMember(d => d.CategoryLabels, o => o.MapFrom(s => s.UserCategories.Select(uc => uc.Value.Label)))
+                .ForMember(d => d.PaymentCount, o => o.MapFrom(s => s.PaymentHistory.Count))
+                .ForMember(d => d.CartCount, o => o.MapFrom(s => s.Carts.Count))
+                .ForMember(d => d.UserPromotions, o => o.Ignore())
+                .ForMember(d => d.Addresses, o => o.Ignore());
         }
     }
 }

@@ -91,6 +91,16 @@ namespace BEAPI.Database
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<UserPromotion>()
+                .HasOne(up => up.User).WithMany(u => u.UserPromotions).HasForeignKey(up => up.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserPromotion>()
+                .HasOne(up => up.Promotion).WithMany(p => p.UserPromotions).HasForeignKey(up => up.PromotionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Promotion>().HasIndex(p => p.IsActive);
+
             modelBuilder.Entity<Role>().HasData(
                  new Role { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Guardian" },
                  new Role { Id = Guid.Parse("22222222-2222-2222-2222-222222222222"), Name = "Elder" },

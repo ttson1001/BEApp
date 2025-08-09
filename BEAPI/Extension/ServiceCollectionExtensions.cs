@@ -30,6 +30,8 @@ namespace BEAPI.Extension
             services.AddScoped<IRelationShipService, RelationShipService>();
             services.AddScoped<IElderService, ElderService>();
             services.AddScoped<IMedicalReportService, MedicalReportService>();
+            services.AddScoped<IReportService, ReportService>();
+            services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<VNPayService>();
         }
     }

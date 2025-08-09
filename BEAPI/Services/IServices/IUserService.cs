@@ -12,5 +12,6 @@ namespace BEAPI.Services.IServices
         Task<PagedResult<UserListDto>> FilterUsersAsync(UserFilterDto request);
         Task CreateUserAsync(UserCreateDto dto);
         Task BanOrUnbanUserAsync(string userId);
+        Task<UserDetailDto> GetDetailAsync(Guid id);
     }
 }

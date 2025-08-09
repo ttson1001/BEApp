@@ -38,7 +38,9 @@ namespace BEAPI.Entities
         public Guid? GuardianId { get; set; }
         public User? Guardian { get; set; }
         public Guid? RoleId { get; set; }
+        public int RewardPoint { get; set; } = 0;
         public Role Role { get; set; }
+        public virtual List<UserPromotion> UserPromotions { get; set; } = new();
         public virtual List<Address> Addresses { get; set; } = new List<Address>();
         public virtual List<Cart> Carts { get; set; } = new List<Cart>();
         public virtual List<PaymentHistory> PaymentHistory { get; set; } = new List<PaymentHistory>();

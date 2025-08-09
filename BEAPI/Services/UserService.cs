@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using BEAPI.Dtos.Addreess;
 using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Elder;
+using BEAPI.Dtos.Promotion;
 using BEAPI.Dtos.User;
 using BEAPI.Entities;
 using BEAPI.Exceptions;
@@ -201,6 +203,28 @@ namespace BEAPI.Services
             return elder == null ? throw new Exception(ExceptionConstant.ElderNotFound) : _jwtService.GenerateToken(elder, null);
         }
 
+        public async Task<UserDetailDto> GetDetailAsync(Guid id)
+        {
+            var user = await _userRepo.Get()
+                .Include(u => u.Role)
+                .Include(u => u.Addresses)
+                .Include(u => u.Carts)
+                .Include(u => u.PaymentHistory)
+                .Include(u => u.UserCategories).ThenInclude(uc => uc.Value)
+                .Include(u => u.UserPromotions).ThenInclude(up => up.Promotion)
+                .FirstOrDefaultAsync(u => u.Id == id)
+                ?? throw new Exception("User not found");
 
+            var dto = _mapper.Map<UserDetailDto>(user);
+
+            dto.Addresses = _mapper.Map<List<AddressDto>>(user.Addresses);
+
+            dto.UserPromotions = user.UserPromotions
+                .OrderByDescending(up => up.CreationDate)
+                .Select(up => _mapper.Map<UserPromotionItemDto>(up))
+                .ToList();
+
+            return dto;
+        }
     }
 }

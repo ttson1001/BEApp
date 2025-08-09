@@ -126,5 +126,27 @@ namespace BEAPI.Controllers
                 });
             }
         }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetDetail(Guid id)
+        {
+            try
+            {
+                var rs = await _userService.GetDetailAsync(id);
+                return Ok(new ResponseDto
+                {
+                    Message = "Get user detail successfully",
+                    Data = rs
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Message = ex.Message,
+                    Data = null
+                });
+            }
+        }
     }
 }
