@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BEAPI.Constants;
 using BEAPI.Dtos.Auth;
+using BEAPI.Dtos.Category;
 using BEAPI.Dtos.Elder;
 using BEAPI.Dtos.Promotion;
 using BEAPI.Dtos.User;
@@ -68,11 +69,16 @@ namespace BEAPI.MappingProfile
 
             CreateMap<User, UserDetailDto>()
                 .ForMember(d => d.RoleName, o => o.MapFrom(s => s.Role != null ? s.Role.Name : null))
-                .ForMember(d => d.CategoryLabels, o => o.MapFrom(s => s.UserCategories.Select(uc => uc.Value.Label)))
+                .ForMember(d => d.CategoryValues,
+                    opt => opt.MapFrom(u => u.UserCategories.Select(uc => uc.Value)))
                 .ForMember(d => d.PaymentCount, o => o.MapFrom(s => s.PaymentHistory.Count))
                 .ForMember(d => d.CartCount, o => o.MapFrom(s => s.Carts.Count))
                 .ForMember(d => d.UserPromotions, o => o.Ignore())
                 .ForMember(d => d.Addresses, o => o.Ignore());
+
+            CreateMap<Value, CategoryValueDto>()
+                .ForMember(d => d.Id, o => o.MapFrom(s => s.Id.ToString()));
+               
         }
     }
 }

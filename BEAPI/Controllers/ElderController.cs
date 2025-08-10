@@ -1,4 +1,6 @@
 ﻿using BEAPI.Constants;
+using BEAPI.Dtos.Addreess;
+using BEAPI.Dtos.Category;
 using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Elder;
 using BEAPI.Exceptions;
@@ -72,6 +74,34 @@ namespace BEAPI.Controllers
             {
                 await _elderService.UpdateElderAsync(dto);
                 return Ok(new ResponseDto {Message = "Update elder successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
+        [HttpPut("[action]")]
+        public async Task<IActionResult> UpdateElderAdressAsync([FromBody] List<UpdateAddressDto> dto, string elderId)
+        {
+            try
+            {
+                await _elderService.UpdateElderAdressAsync(dto,elderId);
+                return Ok(new ResponseDto { Message = "Update elderAddress successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
+        [HttpPut("[action]")]
+        public async Task<IActionResult> UpdateElderCategory([FromBody] List<UpdateCategoryElderDto> dto, Guid elderId)
+        {
+            try
+            {   
+                await _elderService.UpdateElderCategory(dto, elderId);
+                return Ok(new ResponseDto { Message = "Update elderAddress successfully." });
             }
             catch (Exception ex)
             {

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using BEAPI.Dtos.Addreess;
+using BEAPI.Dtos.Category;
 using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Elder;
 using BEAPI.Dtos.Promotion;
@@ -218,6 +219,19 @@ namespace BEAPI.Services
             var dto = _mapper.Map<UserDetailDto>(user);
 
             dto.Addresses = _mapper.Map<List<AddressDto>>(user.Addresses);
+
+            dto.CategoryValues = user.UserCategories
+                    .Select(uc => new CategoryValueDto
+                    {
+                        Id = uc.Value.Id.ToString(),
+                        Code = uc.Value.Code,
+                        Description = uc.Value.Description,
+                        Label = uc.Value.Label,
+                        Type = uc.Value.Type,
+                        ChildrenId = uc.Value.ChildListOfValueId?.ToString(),
+                        ChildrentLabel = uc.Value.ChildListOfValue?.Label
+                    })
+                    .ToList();
 
             dto.UserPromotions = user.UserPromotions
                 .OrderByDescending(up => up.CreationDate)

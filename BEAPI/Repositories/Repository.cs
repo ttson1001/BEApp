@@ -53,7 +53,6 @@ namespace BEAPI.Repositories
                 baseEntity.ModificationDate = DateTimeOffset.UtcNow;
             }
             _set.Update(entity);
-            _set.Update(entity);
         }
 
         public void DeleteRange(IEnumerable<T> entities)

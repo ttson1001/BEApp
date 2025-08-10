@@ -1,4 +1,6 @@
-﻿using BEAPI.Dtos.Elder;
+﻿using BEAPI.Dtos.Addreess;
+using BEAPI.Dtos.Category;
+using BEAPI.Dtos.Elder;
 
 namespace BEAPI.Services.IServices
 {
@@ -7,5 +9,7 @@ namespace BEAPI.Services.IServices
         Task<List<ElderDto>> GetElderByCusId(string cusId);
         Task UpdateElderAsync(ElderUpdateDto dto);
         Task ChangeIsDeletedAsync(string id);
+        Task UpdateElderAdressAsync(List<UpdateAddressDto> addressesDto, string userId);
+        Task UpdateElderCategory(List<UpdateCategoryElderDto> updateCategoryElderDtos, Guid elderId);
     }
 }

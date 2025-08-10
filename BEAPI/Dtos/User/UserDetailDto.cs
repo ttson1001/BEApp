@@ -1,4 +1,5 @@
 ﻿using BEAPI.Dtos.Addreess;
+using BEAPI.Dtos.Category;
 using BEAPI.Dtos.Promotion;
 using BEAPI.Entities.Enum;
 
@@ -24,7 +25,7 @@ namespace BEAPI.Dtos.User
 
         public List<AddressDto> Addresses { get; set; } = new();
         public List<UserPromotionItemDto> UserPromotions { get; set; } = new();
-        public List<string> CategoryLabels { get; set; } = new();
+        public List<CategoryValueDto> CategoryValues { get; set; } = new();
 
         public int CartCount { get; set; }
         public int PaymentCount { get; set; }
