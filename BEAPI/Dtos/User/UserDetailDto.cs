@@ -2,6 +2,7 @@
 using BEAPI.Dtos.Category;
 using BEAPI.Dtos.Promotion;
 using BEAPI.Entities.Enum;
+using System.ComponentModel.DataAnnotations;
 
 namespace BEAPI.Dtos.User
 {
@@ -11,9 +12,11 @@ namespace BEAPI.Dtos.User
         public string FullName { get; set; } = string.Empty;
         public string? UserName { get; set; }
         public string? Email { get; set; }
+        [MaxLength(255)]
         public string? Avatar { get; set; }
         public Gender? Gender { get; set; }
         public string? PhoneNumber { get; set; }
+        public string? EmergencyPhoneNumber { get; set; }
         public DateTimeOffset? BirthDate { get; set; }
         public int Age { get; set; }
         public int RewardPoint { get; set; }

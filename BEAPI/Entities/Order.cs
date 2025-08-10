@@ -24,5 +24,16 @@ namespace BEAPI.Entities
         public string PhoneNumber { get; set; } = string.Empty;
 
         public virtual List<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+
+        public List<OrderShipmentEvent> ShipmentEvents { get; set; } = new();
+
+        // ====== GHN Shipping fields ======
+        public string? ShippingProvider { get; set; } // "GHN"
+        public int? ShippingServiceId { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? ShippingFee { get; set; }
+        public string? ShippingCode { get; set; }      // GHN order_code
+        public string? ShippingStatus { get; set; }    // delivering, delivered, ...
+        public DateTimeOffset? ExpectedDeliveryTime { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using BEAPI.Repositories;
 using BEAPI.Services;
 using BEAPI.Services.IServices;
+using BEAPI.Services.Shipping;
 
 namespace BEAPI.Extension
 { 
@@ -32,6 +33,7 @@ namespace BEAPI.Extension
             services.AddScoped<IMedicalReportService, MedicalReportService>();
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
+            services.AddScoped<ShippingService>();
             services.AddScoped<VNPayService>();
         }
     }

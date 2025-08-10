@@ -18,8 +18,6 @@ namespace BEAPI.Dtos.Elder
         public string? EmergencyPhoneNumber { get; set; }
         public string? RelationShip { get; set; }
         public Gender Gender { get; set; }
-        public List<AddressDto> Addresses { get; set; } = new();
-        public List<string> CategoryValueIds { get; set; } = new();
 
     }
 }

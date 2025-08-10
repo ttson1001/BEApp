@@ -28,9 +28,21 @@ namespace BEAPI.Database
         public DbSet<Wallet> Wallets { get; set; }
         public BeContext(DbContextOptions<BeContext> options) : base(options) { }
 
+        public DbSet<OrderShipmentEvent> OrderShipmentEvents { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<User>()
+                .Property(u => u.Avatar)
+                .HasMaxLength(2048);
+            modelBuilder.Entity<OrderShipmentEvent>()
+                .HasOne(e => e.Order)
+                .WithMany(o => o.ShipmentEvents)
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.Elder)
                 .WithMany()
