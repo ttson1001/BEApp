@@ -180,15 +180,17 @@ namespace BEAPI.Services
         public async Task<(string Token, string QrBase64)> GenerateElderLoginQrAsync(Guid elderId)
         {
             var elder = await _userRepo.Get().FirstOrDefaultAsync(u => u.Id == elderId && u.Role.Name == "Elder") ?? throw new Exception(ExceptionConstant.ElderNotFound);
-            var token = _jwtService.GenerateToken(elder, expiresInMinutes: 2);
+            var tokens = _jwtService.GenerateToken(elder, expiresInMinutes: 2);
 
-            var qrUrl = $"{_baseUrl}/api/auth/qr-login?token={token}";
+            var qrUrl = $"{_baseUrl}/api/auth/qr-login?token={tokens}";
 
             using var qrGenerator = new QRCodeGenerator();
             using var qrCodeData = qrGenerator.CreateQrCode(qrUrl, QRCodeGenerator.ECCLevel.Q);
             using var qrCode = new PngByteQRCode(qrCodeData);
             var qrBytes = qrCode.GetGraphic(20);
             var qrBase64 = Convert.ToBase64String(qrBytes);
+
+            var token = await LoginByQrAsync(tokens);
 
             return (token, $"data:image/png;base64,{qrBase64}");
         }
