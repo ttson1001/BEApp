@@ -126,6 +126,38 @@ namespace BEAPI.Controllers
             }
         }
 
+        [HttpGet("[action]/{elderId}")]
+        public async Task<IActionResult> GetCartByElderIdAsync(string elderId, [FromQuery] CartStatus status)
+        {
+            try
+            {
+                var cart = await _service.GetCartByElderIdAsync(elderId, status);
+
+                if (cart == null)
+                {
+                    return NotFound(new ResponseDto
+                    {
+                        Data = null,
+                        Message = "Cart not found"
+                    });
+                }
+
+                return Ok(new ResponseDto
+                {
+                    Message = "Get cart successfully",
+                    Data = cart
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
+            }
+        }
+
         [HttpPut("{id}/[action]")]
         public async Task<IActionResult> ChangeCartStatus(string id, [FromQuery] CartStatus status)
         {

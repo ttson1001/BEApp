@@ -21,7 +21,6 @@ namespace BEAPI.Controllers
             _orderService = orderService;
         }
 
-        [Authorize(Roles = UserContanst.UserRole)]
         [HttpPost("[action]")]
         public async Task<IActionResult> CreateOrder([FromBody] OrderCreateDto orderCreateDto)
         {

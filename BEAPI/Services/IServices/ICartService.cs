@@ -11,5 +11,6 @@ namespace BEAPI.Services.IServices
         Task<CartDto?> GetCartByIdAsync(string id);
         Task ChangeStatus(CartStatus cartStatus, string id);
         Task<CartDto?> GetCartByCustomerIdAsync(string cusId, CartStatus cartStatus);
+        Task<CartDto?> GetCartByElderIdAsync(string elderId, CartStatus cartStatus);
     }
 }
