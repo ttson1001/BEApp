@@ -80,16 +80,17 @@ namespace BEAPI.Database
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Feedback>()
-               .HasOne(r => r.User)
-               .WithMany()
-               .HasForeignKey(r => r.UserId)
-               .OnDelete(DeleteBehavior.Restrict);
+                 .HasOne(r => r.User)
+                 .WithMany()                     
+                 .HasForeignKey(r => r.UserId)
+                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Feedback>()
                 .HasOne(r => r.Admin)
-                .WithMany()
-                .HasForeignKey(r => r.UserId)
+                .WithMany()                    
+                .HasForeignKey(r => r.AdminId) 
                 .OnDelete(DeleteBehavior.Restrict);
+
 
             modelBuilder.Entity<UserPromotion>()
                 .HasOne(up => up.User).WithMany(u => u.UserPromotions).HasForeignKey(up => up.UserId)

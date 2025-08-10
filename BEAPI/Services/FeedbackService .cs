@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using BEAPI.Constants;
 using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Feedback;
 using BEAPI.Entities;
 using BEAPI.Entities.Enum;
+using BEAPI.Helper;
 using BEAPI.Repositories;
 using BEAPI.Services.IServices;
 using Microsoft.EntityFrameworkCore;
@@ -90,25 +92,7 @@ namespace BEAPI.Services
         {
             var entity = _mapper.Map<Feedback>(dto);
             entity.Status = FeedbackStatus.Pending;
-
-
-            if (entity.AdminId == null)
-            {
-                var adminId = await _userRepo.Get()
-                    .Where(u => u.Role != null && u.Role.Name == "Admin")
-                    .Select(u => new
-                    {
-                        u.Id,
-                        Pending = _feedbackRepo.Get().Count(f => f.AdminId == u.Id && f.Status == FeedbackStatus.Pending)
-                    })
-                    .OrderBy(x => x.Pending)
-                    .Select(x => x.Id)
-                    .FirstOrDefaultAsync();
-
-                if (adminId != Guid.Empty)
-                    entity.AdminId = adminId;
-            }
-
+            entity.AdminId = GuidHelper.ParseOrThrow(UserContanst.AdminRoleId);
             await _feedbackRepo.AddAsync(entity);
             await _feedbackRepo.SaveChangesAsync();
         }

@@ -14,5 +14,7 @@ namespace BEAPI.Entities
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal ProductPrice { get; set; }
+        public int Discount { get; set; }
+
     }
 }

@@ -52,8 +52,9 @@ namespace BEAPI.MappingProfile
 
             CreateMap<ElderUpdateDto, User>()
                 .ForMember(dest => dest.BirthDate, opt => opt.MapFrom(src => src.BirthDate))
-                .ForMember(dest => dest.Spendlimit, opt => opt.MapFrom(src => src.Spendlimit))
+                .ForMember(dest => dest.Spendlimit, opt => opt.MapFrom(src => src.Spendlimit)).ForMember(d => d.RowVersion, o => o.Ignore())
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => (Gender)src.Gender))
+                .ForMember(dest => dest.UserCategories, opt => opt.Ignore())
                 .ForMember(dest => dest.Addresses, opt => opt.Ignore())
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
 

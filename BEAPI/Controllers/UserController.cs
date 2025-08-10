@@ -1,6 +1,8 @@
 ﻿using BEAPI.Constants;
 using BEAPI.Dtos.Common;
+using BEAPI.Dtos.Elder;
 using BEAPI.Dtos.User;
+using BEAPI.Helper;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,11 +36,11 @@ namespace BEAPI.Controllers
 
         [HttpPost("[action]")]
         [Authorize(Roles = UserContanst.UserRole)]
-        public async Task<IActionResult> GenerateQr([FromBody] Guid elderId)
+        public async Task<IActionResult> GenerateQr([FromBody] ElderQrDto dto)
         {
             try
             {
-                var result = await _userService.GenerateElderLoginQrAsync(elderId);
+                var result = await _userService.GenerateElderLoginQrAsync(GuidHelper.ParseOrThrow(dto.ElderId));
                 var response = new ResponseDto
                 {
                     Message = "QR code generated successfully",
