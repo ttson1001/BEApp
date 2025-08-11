@@ -67,7 +67,7 @@ namespace BEAPI.Services
                 CartId = cart.Id,
                 CustomerId = cart.CustomerId,
                 CustomerName = cart.Customer?.FullName ?? string.Empty,
-                Status = cart.Status.ToString(),
+                Status = cart.Status,
                 ElderId = cart.ElderId,
                 ElderName = cart.Elder?.FullName,
                 Items = items.Select(i =>
@@ -140,7 +140,7 @@ namespace BEAPI.Services
                 CartId = cart.Id,
                 CustomerId = cart.CustomerId,
                 CustomerName = cart.Customer?.FullName ?? string.Empty,
-                Status = cart.Status.ToString(),
+                Status = cart.Status,
                 ElderId = cart.ElderId,
                 ElderName = cart.Elder?.FullName,
                 Items = listCart.Select(i =>
@@ -205,7 +205,7 @@ namespace BEAPI.Services
                 CartId = cart.Id,
                 CustomerId = cart.CustomerId,
                 CustomerName = cart.Customer?.FullName ?? string.Empty,
-                Status = cart.Status.ToString(),
+                Status = cart.Status,
                 ElderId = cart.ElderId,
                 ElderName = cart.Elder?.FullName,
                 Items = listCart.Select(i =>
@@ -254,10 +254,13 @@ namespace BEAPI.Services
                     .Where(p => productVariantIds.Contains(p.Id))
                     .Select(p => new { p.Id, p.Price })
                     .ToDictionaryAsync(p => p.Id, p => p.Price);
-
             var cart = await _cartRepo.Get()
-                .Include(c => c.Items)
-                .FirstOrDefaultAsync(c => c.CustomerId == customerId && c.Status == CartStatus.Created);
+                 .Include(c => c.Items)
+                 .FirstOrDefaultAsync(c =>
+                     (customer.GuardianId != null
+                         ? c.ElderId == customerId
+                         : c.CustomerId == customerId)
+                     && c.Status == CartStatus.Created);
 
             if (cart == null)
             {
@@ -307,7 +310,7 @@ namespace BEAPI.Services
                 CartId = cart.Id,
                 CustomerId = cart.CustomerId,
                 CustomerName = cart.Customer.FullName,
-                Status = cart.Status.ToString(),
+                Status = cart.Status,
                 ElderId = cart.ElderId,
                 ElderName = cart.Elder?.FullName ?? null,
                 Items = cart.Items.Select(i => new CartItemDto
