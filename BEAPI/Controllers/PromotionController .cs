@@ -83,7 +83,7 @@ namespace BEAPI.Controllers
         }
 
         [HttpPost("[action]")]
-        public async Task<IActionResult> Redeem([FromBody] RedeemPromotionDto dto)
+        public async Task<IActionResult> UserChangeDiscount([FromBody] RedeemPromotionDto dto)
         {
             try
             {

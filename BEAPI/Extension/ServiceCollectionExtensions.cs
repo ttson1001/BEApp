@@ -33,6 +33,7 @@ namespace BEAPI.Extension
             services.AddScoped<IMedicalReportService, MedicalReportService>();
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
+            services.AddScoped<IPromotionService, PromotionService>();
             services.AddScoped<ShippingService>();
             services.AddScoped<VNPayService>();
         }

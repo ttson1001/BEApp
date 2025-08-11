@@ -99,7 +99,6 @@ namespace BEAPI.Services
             entity.Title = dto.Title;
             entity.Description = dto.Description;
             entity.DiscountPercent = dto.DiscountPercent;
-            entity.ApplicableProductId = dto.ApplicableProductId;
             entity.RequiredPoints = dto.RequiredPoints;
             entity.StartAt = dto.StartAt;
             entity.EndAt = dto.EndAt;

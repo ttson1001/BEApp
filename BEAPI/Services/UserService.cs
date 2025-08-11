@@ -114,7 +114,7 @@ namespace BEAPI.Services
                 PhoneNumber = dto.PhoneNumber,
                 RoleId = GuidHelper.ParseOrThrow(dto.RoleId, nameof(dto.RoleId)),
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                IsVerified = false
+                IsVerified = true
             };
 
             await _userRepo.AddAsync(user);
