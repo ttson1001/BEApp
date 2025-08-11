@@ -303,7 +303,7 @@ namespace BEAPI.Services
                 .Include(x => x.Items)
                     .ThenInclude(i => i.ProductVariant)
                         .ThenInclude(pv => pv.Product)
-                .Where(x => x.CustomerId == customerId && x.Status == CartStatus.Created && x.Elder != null)
+                .Where(x => x.CustomerId == customerId && x.Elder != null)
                 .ToListAsync();
 
             var result = carts.Select(cart => new CartDto
