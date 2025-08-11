@@ -67,7 +67,7 @@ namespace BEAPI.Services
                 CartId = cart.Id,
                 CustomerId = cart.CustomerId,
                 CustomerName = cart.Customer?.FullName ?? string.Empty,
-                Status = cart.Status,
+                Status = cart.Status.ToString(),
                 ElderId = cart.ElderId,
                 ElderName = cart.Elder?.FullName,
                 Items = items.Select(i =>
@@ -140,7 +140,7 @@ namespace BEAPI.Services
                 CartId = cart.Id,
                 CustomerId = cart.CustomerId,
                 CustomerName = cart.Customer?.FullName ?? string.Empty,
-                Status = cart.Status,
+                Status = cart.Status.ToString(),
                 ElderId = cart.ElderId,
                 ElderName = cart.Elder?.FullName,
                 Items = listCart.Select(i =>
@@ -205,7 +205,7 @@ namespace BEAPI.Services
                 CartId = cart.Id,
                 CustomerId = cart.CustomerId,
                 CustomerName = cart.Customer?.FullName ?? string.Empty,
-                Status = cart.Status,
+                Status = cart.Status.ToString(),
                 ElderId = cart.ElderId,
                 ElderName = cart.Elder?.FullName,
                 Items = listCart.Select(i =>
@@ -262,6 +262,7 @@ namespace BEAPI.Services
                          : c.CustomerId == customerId)
                      && c.Status == CartStatus.Created);
 
+
             if (cart == null)
             {
                 cart = new Cart { Status = CartStatus.Created };
@@ -310,7 +311,7 @@ namespace BEAPI.Services
                 CartId = cart.Id,
                 CustomerId = cart.CustomerId,
                 CustomerName = cart.Customer.FullName,
-                Status = cart.Status,
+                Status = cart.Status.ToString(),
                 ElderId = cart.ElderId,
                 ElderName = cart.Elder?.FullName ?? null,
                 Items = cart.Items.Select(i => new CartItemDto
