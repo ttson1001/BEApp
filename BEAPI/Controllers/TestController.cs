@@ -35,5 +35,28 @@ namespace BEAPI.Controllers
             }
         }
 
+        [HttpGet("[action]")]
+        public IActionResult RedirectTo([FromQuery] string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return BadRequest(new ResponseDto { Message = "url is required" });
+            }
+            // Basic allow-list: allow http(s) and custom schemes (e.g., app:// or silvercart://)
+            // In production, you should validate domains/schemes strictly to prevent open redirects.
+            return Content($@"
+            <html>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta http-equiv='refresh' content='0;url={url}'>
+                    <script>window.location.href='{url}';</script>
+                </head>
+                <body>
+                    <p>Redirecting...</p>
+                    <a href='{url}'>Tap here if not redirected</a>
+                </body>
+            </html>", "text/html");
+        }
+
     }
 }
