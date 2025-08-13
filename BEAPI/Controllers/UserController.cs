@@ -150,5 +150,27 @@ namespace BEAPI.Controllers
                 });
             }
         }
+
+        [HttpPut("[action]")]
+        public async Task<IActionResult> Update([FromBody] UserUpdateDto dto)
+        {
+            try
+            {
+                await _userService.UpdateUserAsync(dto);
+                return Ok(new ResponseDto
+                {
+                    Message = "User updated successfully",
+                    Data = null
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Message = ex.Message,
+                    Data = null
+                });
+            }
+        }
     }
 }

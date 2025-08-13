@@ -129,6 +129,23 @@ namespace BEAPI.Services
             await _userRepo.SaveChangesAsync();
         }
 
+        public async Task UpdateUserAsync(UserUpdateDto dto)
+        {
+            var userId = GuidHelper.ParseOrThrow(dto.Id, nameof(dto.Id));
+            var user = await _userRepo.Get().Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId)
+                ?? throw new Exception("User not found");
+
+            if (user.Role?.Name == "Elder")
+                throw new Exception("Cannot update Elder with this endpoint");
+
+            if (!string.IsNullOrWhiteSpace(dto.FullName)) user.FullName = dto.FullName;
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
+            if (!string.IsNullOrWhiteSpace(dto.Avatar)) user.Avatar = dto.Avatar;
+            if (!string.IsNullOrWhiteSpace(dto.Description)) user.Description = dto.Description;
+
+            await _userRepo.SaveChangesAsync();
+        }
+
         public async Task BanOrUnbanUserAsync(string userId)
         {
             var guidUser = GuidHelper.ParseOrThrow(userId, nameof(userId));
