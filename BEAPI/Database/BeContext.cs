@@ -35,6 +35,9 @@ namespace BEAPI.Database
 
 
             base.OnModelCreating(modelBuilder);
+            // Disable RowVersion for Wallet entity only
+            modelBuilder.Entity<Wallet>()
+                .Ignore(w => w.RowVersion);
             modelBuilder.Entity<User>()
                 .Property(u => u.Avatar)
                 .HasMaxLength(2048);
@@ -75,7 +78,7 @@ namespace BEAPI.Database
 
             modelBuilder.Entity<PaymentHistory>()
                 .HasOne(ph => ph.User)
-                .WithMany()
+                .WithMany(u => u.PaymentHistory)
                 .HasForeignKey(ph => ph.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -166,6 +169,26 @@ namespace BEAPI.Database
                     IsVerified = true,
                     Gender = Gender.Male,
                     CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
+                }
+            );
+            modelBuilder.Entity<Wallet>().HasData(
+                new Wallet
+                {
+                    Id = Guid.Parse("77777777-7777-7777-7777-777777777001"),
+                    UserId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                    Amount = 0
+                },
+                new Wallet
+                {
+                    Id = Guid.Parse("77777777-7777-7777-7777-777777777002"),
+                    UserId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                    Amount = 0
+                },
+                new Wallet
+                {
+                    Id = Guid.Parse("77777777-7777-7777-7777-777777777003"),
+                    UserId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+                    Amount = 0
                 }
             );
             modelBuilder.Entity<ListOfValue>().HasData(

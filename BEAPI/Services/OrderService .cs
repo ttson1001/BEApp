@@ -18,6 +18,7 @@ namespace BEAPI.Services
         private readonly IRepository<User> _userRepo;
         private readonly IRepository<Cart> _cartRepo;
         private readonly IRepository<Address> _addressRepo;
+        private readonly IRepository<Wallet> _walletRepo;
         private readonly IMapper _mapper;
 
         public OrderService(IRepository<Order> orderRepo,
@@ -26,6 +27,7 @@ namespace BEAPI.Services
                             IRepository<Address> addressRepo,
                             IRepository<PaymentHistory> paymentHistoryRepo,
                             IRepository<UserPromotion> userPromotionRepo,
+                            IRepository<Wallet> walletRepo,
                             IMapper mapper)
         {
             _orderRepo = orderRepo;
@@ -35,9 +37,20 @@ namespace BEAPI.Services
             _paymentHistoryRepo = paymentHistoryRepo;
             _addressRepo = addressRepo;
             _userPromotionRepo = userPromotionRepo;
+            _walletRepo = walletRepo;
         }
 
         public async Task CreateOrderAsync(OrderCreateDto dto, bool isPaid)
+        {
+            await PlaceOrderInternal(dto, payByWallet: false, isPaidParam: isPaid);
+        }
+
+        public async Task CreateOrderByWalletAsync(OrderCreateDto dto)
+        {
+            await PlaceOrderInternal(dto, payByWallet: true, isPaidParam: true);
+        }
+
+        private async Task PlaceOrderInternal(OrderCreateDto dto, bool payByWallet, bool isPaidParam)
         {
             var cart = await GetPendingCartAsync(dto.CartId);
             var userPromotion = await ValidateAndGetPromotionAsync(dto.UserPromotionId, cart.CustomerId);
@@ -51,6 +64,26 @@ namespace BEAPI.Services
 
             var total = subTotal - itemDiscountAmount - promoDiscountAmount;
             if (total < 0) total = 0;
+
+            string paymentMethod;
+            var isPaid = isPaidParam;
+
+            if (payByWallet)
+            {
+                var deducted = await _walletRepo.Get()
+                    .Where(w => w.UserId == cart.CustomerId && w.Amount >= total)
+                    .ExecuteUpdateAsync(s => s.SetProperty(w => w.Amount, w => w.Amount - total));
+                if (deducted == 0)
+                {
+                    throw new Exception("Insufficient wallet balance");
+                }
+                paymentMethod = "WALLET";
+                isPaid = true;
+            }
+            else
+            {
+                paymentMethod = "VNPay";
+            }
 
             var order = new Order
             {
@@ -72,7 +105,6 @@ namespace BEAPI.Services
             };
 
             await _orderRepo.AddAsync(order);
-
             cart.Status = isPaid ? CartStatus.Approve : CartStatus.Pending;
 
             if (isPaid)
@@ -84,7 +116,7 @@ namespace BEAPI.Services
                     Amount = total,
                     OrderId = order.Id,
                     UserId = cart.CustomerId,
-                    PaymentMenthod = "VNPay",
+                    PaymentMenthod = paymentMethod,
                     paymentStatus = PaymentStatus.Success
                 };
                 await _paymentHistoryRepo.AddAsync(payment);
@@ -101,6 +133,14 @@ namespace BEAPI.Services
                     userPromotion.IsUsed = true;
                     _userPromotionRepo.Update(userPromotion);
                 }
+
+                var admin = await _userRepo.Get()
+                    .Include(u => u.Role)
+                    .FirstAsync(u => (u.Role != null && u.Role.Name == "Admin"));
+                var adminWallet = await _walletRepo.Get()
+                    .Where(w => w.UserId == admin.Id)
+                    .FirstAsync();
+                adminWallet.Amount = adminWallet.Amount + total;
             }
 
             await _orderRepo.SaveChangesAsync();

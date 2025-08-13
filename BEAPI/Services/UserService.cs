@@ -26,12 +26,14 @@ namespace BEAPI.Services
         private readonly IRepository<District> _districtRepo;
         private readonly IRepository<Ward> _warRepo;
         private readonly IRepository<Province> _provineRepo;
+        private readonly IRepository<Wallet> _walletRepo;
         private readonly string _baseUrl;
 
         public UserService(IOptions<AppSettings> options,
             IRepository<District> districtRepo,
             IRepository<Ward> warRepo,
             IRepository<Province> provineRepo,
+            IRepository<Wallet> walletRepo,
             IRepository<User> userRepo,
             IMapper mapper,
             IJwtService jwtService)
@@ -43,6 +45,7 @@ namespace BEAPI.Services
             _districtRepo = districtRepo;
             _warRepo = warRepo;
             _provineRepo = provineRepo;
+            _walletRepo = walletRepo;
         }
 
         public async Task CreateElder(ElderRegisterDto elderRegisterDto, Guid userId)
@@ -99,6 +102,11 @@ namespace BEAPI.Services
 
             await _userRepo.AddAsync(user);
             await _userRepo.SaveChangesAsync();
+
+            // Create wallet immediately for the new user
+            var wallet = new Wallet { UserId = user.Id, Amount = 0 };
+            await _walletRepo.AddAsync(wallet);
+            await _walletRepo.SaveChangesAsync();
         }
 
         public async Task CreateUserAsync(UserCreateDto dto)

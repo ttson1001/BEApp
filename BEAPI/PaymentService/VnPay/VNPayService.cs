@@ -6,6 +6,7 @@ using BEAPI.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Net;
+using System.Globalization;
 
 namespace BEAPI.PaymentService.VnPay
 {
@@ -52,6 +53,37 @@ namespace BEAPI.PaymentService.VnPay
             long vnpAmount = (long)Math.Round(total * 100m, MidpointRounding.AwayFromZero);
 
             var orderInfo = $"CartId={vnPayRequest.CartId};AddressId={vnPayRequest.AddressId};Note={vnPayRequest.Note};UserPromotionId={vnPayRequest.UserPromotionId}";
+
+            VnPayLib vnpay = new VnPayLib();
+            vnpay.AddRequestData("vnp_Version", VnPayLib.VERSION);
+            vnpay.AddRequestData("vnp_Command", "pay");
+            vnpay.AddRequestData("vnp_TmnCode", _settings.TmCode);
+            vnpay.AddRequestData("vnp_Amount", vnpAmount.ToString());
+            vnpay.AddRequestData("vnp_BankCode", "VNBANK");
+            vnpay.AddRequestData("vnp_CreateDate", createdDate.ToString("yyyyMMddHHmmss"));
+            vnpay.AddRequestData("vnp_CurrCode", "VND");
+            vnpay.AddRequestData("vnp_IpAddr", Utils.GetIpAddress(context));
+            vnpay.AddRequestData("vnp_Locale", "vn");
+            vnpay.AddRequestData("vnp_OrderInfo", WebUtility.UrlEncode(orderInfo));
+            vnpay.AddRequestData("vnp_OrderType", "other");
+            vnpay.AddRequestData("vnp_ReturnUrl", _settings.ReturnUrl);
+            vnpay.AddRequestData("vnp_TxnRef", orderId.ToString());
+
+            string paymentUrl = vnpay.CreateRequestUrl(_settings.BaseUrl, _settings.HashSecret);
+            return paymentUrl;
+        }
+
+        public string VNPayWalletTopUp(HttpContext context, Guid userId, decimal amount)
+        {
+            if (amount <= 0)
+            {
+                throw new Exception("Amount must be greater than 0");
+            }
+            var createdDate = DateTime.Now;
+            var orderId = DateTime.Now.Ticks;
+
+            long vnpAmount = (long)Math.Round(amount * 100m, MidpointRounding.AwayFromZero);
+            var orderInfo = $"Type=WalletTopUp;UserId={userId};Amount={amount.ToString(CultureInfo.InvariantCulture)}";
 
             VnPayLib vnpay = new VnPayLib();
             vnpay.AddRequestData("vnp_Version", VnPayLib.VERSION);

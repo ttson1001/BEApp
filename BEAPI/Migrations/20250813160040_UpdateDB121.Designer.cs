@@ -4,6 +4,7 @@ using BEAPI.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BEAPI.Migrations
 {
     [DbContext(typeof(BeContext))]
-    partial class BeContextModelSnapshot : ModelSnapshot
+    [Migration("20250813160040_UpdateDB121")]
+    partial class UpdateDB121
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -686,6 +689,9 @@ namespace BEAPI.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("UserId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("paymentStatus")
                         .HasColumnType("int");
 
@@ -694,6 +700,8 @@ namespace BEAPI.Migrations
                     b.HasIndex("OrderId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("PaymentHistories");
                 });
@@ -1572,6 +1580,11 @@ namespace BEAPI.Migrations
                     b.Property<DateTimeOffset?>("ModificationDate")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1580,29 +1593,6 @@ namespace BEAPI.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Wallets");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("77777777-7777-7777-7777-777777777001"),
-                            Amount = 0m,
-                            IsDeleted = false,
-                            UserId = new Guid("11111111-1111-1111-1111-111111111111")
-                        },
-                        new
-                        {
-                            Id = new Guid("77777777-7777-7777-7777-777777777002"),
-                            Amount = 0m,
-                            IsDeleted = false,
-                            UserId = new Guid("22222222-2222-2222-2222-222222222222")
-                        },
-                        new
-                        {
-                            Id = new Guid("77777777-7777-7777-7777-777777777003"),
-                            Amount = 0m,
-                            IsDeleted = false,
-                            UserId = new Guid("33333333-3333-3333-3333-333333333333")
-                        });
                 });
 
             modelBuilder.Entity("BEAPI.Entities.Ward", b =>
@@ -1775,10 +1765,14 @@ namespace BEAPI.Migrations
                         .HasForeignKey("OrderId");
 
                     b.HasOne("BEAPI.Entities.User", "User")
-                        .WithMany("PaymentHistory")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("BEAPI.Entities.User", null)
+                        .WithMany("PaymentHistory")
+                        .HasForeignKey("UserId1");
 
                     b.Navigation("Order");
 
