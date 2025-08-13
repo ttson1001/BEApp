@@ -24,10 +24,8 @@ namespace BEAPI.Services.Shipping
             _db = db; _ghn = ghn; _opt = opt; _logger = logger;
         }
 
-        // ====== Helpers ======
         private (int weight, int length, int width, int height) GetPackDimsFromOrder(Order order)
-        {
-            // fallback theo số lượng item (nếu bạn muốn dùng theo order thực tế)
+        { 
             int weight = Math.Max((int)order.OrderDetails.Sum(d => d.Quantity * 250), 500); // gram
             int length = 20, width = 15, height = 10; // cm
             return (weight, length, width, height);
@@ -76,13 +74,6 @@ namespace BEAPI.Services.Shipping
             });
         }
 
-        // ====================================================================
-        // ============== NHÓM HÀM "MẶC ĐỊNH" – CHỈ CẦN orderId ===============
-        // ====================================================================
-
-        /// <summary>
-        /// Chỉ tính phí GHN (không lưu DB), auto pick service + pack mặc định.
-        /// </summary>
         public async Task<(int serviceId, int serviceTypeId, decimal fee)> QuoteFeeDefaultAsync(Guid orderId, CancellationToken ct = default)
         {
             var order = await _db.Set<Order>().AsNoTracking()
@@ -107,9 +98,6 @@ namespace BEAPI.Services.Shipping
             return (serviceId, serviceTypeId, fee);
         }
 
-        /// <summary>
-        /// Tính phí và LƯU vào Order.ShippingServiceId/ShippingFee (pack mặc định).
-        /// </summary>
         public async Task<(int serviceId, int serviceTypeId, decimal fee)> RecalcAndSaveFeeDefaultAsync(Guid orderId, CancellationToken ct = default)
         {
             var (serviceId, serviceTypeId, fee) = await QuoteFeeDefaultAsync(orderId, ct);
@@ -124,9 +112,6 @@ namespace BEAPI.Services.Shipping
             return (serviceId, serviceTypeId, fee);
         }
 
-        /// <summary>
-        /// Tạo đơn GHN (auto pick service + pack mặc định), lưu code/fee/status.
-        /// </summary>
         public async Task<(string code, DateTimeOffset? etd, int serviceId, int serviceTypeId, decimal fee)>
             CreateGhnShipmentDefaultAsync(Guid orderId, CancellationToken ct = default)
         {
@@ -142,19 +127,19 @@ namespace BEAPI.Services.Shipping
 
             var (code, etd) = await _ghn.CreateOrderAsync(
                 serviceId: serviceId,
-                serviceTypeId: serviceTypeId,               // yêu cầu GHN
+                serviceTypeId: serviceTypeId,
                 toDistrictId: order.DistrictID,
                 toWardCode: order.WardCode,
                 clientOrderCode: order.Id.ToString(),
                 toName: order.Customer?.FullName ?? "Customer",
-                toPhone: order.PhoneNumber,           // không hardcode
+                toPhone: order.PhoneNumber,         
                 toAddress: order.StreetAddress,
                 items: BuildGhnItems(order),
                 weight: W_DEFAULT,
                 length: L_DEFAULT,
                 width: WIDTH_DEF,
                 height: H_DEFAULT,
-                paymentTypeId: 1,                           // người nhận trả phí
+                paymentTypeId: 1,                           
                 ct: ct
             );
 
@@ -174,9 +159,6 @@ namespace BEAPI.Services.Shipping
             return (code, etd, serviceId, serviceTypeId, fee);
         }
 
-        /// <summary>
-        /// Gửi yêu cầu GHN đến lấy hàng (pickup) cho đơn đã có ShippingCode.
-        /// </summary>
         public async Task RequestPickupAsync(Guid orderId, DateTimeOffset? pickupAt = null, CancellationToken ct = default)
         {
             var order = await _db.Set<Order>().FirstOrDefaultAsync(o => o.Id == orderId, ct)
@@ -240,9 +222,6 @@ namespace BEAPI.Services.Shipping
         // ====== NHÓM HÀM "NÂNG CAO" – GIỮ NGUYÊN CHỮ KÝ CŨ (KHÔNG GÃY) ======
         // ====================================================================
 
-        /// <summary>
-        /// Tính phí theo serviceId truyền vào (giữ API cũ).
-        /// </summary>
         public async Task<decimal> RecalcShippingFeeAsync(Guid orderId, int serviceId, CancellationToken ct = default)
         {
             var order = await _db.Set<Order>()
@@ -262,9 +241,6 @@ namespace BEAPI.Services.Shipping
             return fee;
         }
 
-        /// <summary>
-        /// Chọn service "tốt nhất" (hiện tại lấy cái đầu tiên) và trả phí.
-        /// </summary>
         public async Task<(int serviceId, decimal fee)> QuoteBestServiceAsync(Guid orderId, CancellationToken ct = default)
         {
             var order = await _db.Set<Order>()
@@ -285,11 +261,6 @@ namespace BEAPI.Services.Shipping
             return (serviceId, fee);
         }
 
-        /// <summary>
-        /// Tạo đơn GHN với serviceId truyền vào (giữ API cũ). 
-        /// KHÁCH LƯU Ý: GhnClient.CreateOrderAsync ở bản mới yêu cầu serviceTypeId.
-        /// Sử dụng AutoPickServiceAsync để lấy luôn serviceTypeId.
-        /// </summary>
         public async Task<(string code, DateTimeOffset? etd)> CreateGhnShipmentForOrderAsync(Guid orderId, int? serviceId, CancellationToken ct = default)
         {
             var order = await _db.Set<Order>()
@@ -300,13 +271,11 @@ namespace BEAPI.Services.Shipping
 
             EnsureAddress(order);
 
-            // Chọn service nếu chưa truyền vào + lấy service_type_id
             int finalServiceId;
             int finalServiceTypeId;
             if (serviceId.HasValue)
             {
                 finalServiceId = serviceId.Value;
-                // cố gắng tìm type từ available-services (khớp theo id)
                 var svcs = await _ghn.GetAvailableServicesAsync(order.DistrictID, ct);
                 var svc = svcs.FirstOrDefault(s => (int)s.service_id == finalServiceId);
                 finalServiceTypeId = svc != null ? (int)(svc.service_type_id ?? 0) : 0;
@@ -347,6 +316,57 @@ namespace BEAPI.Services.Shipping
             await _db.SaveChangesAsync(ct);
 
             return (code, etd);
+        }
+
+        public async Task SimulateStatusAsync(Guid orderId, string status, CancellationToken ct = default)
+        {
+            var order = await _db.Set<Order>().FirstOrDefaultAsync(o => o.Id == orderId, ct)
+                ?? throw new Exception("Order not found");
+
+            order.ShippingStatus = status;
+            _db.Set<OrderShipmentEvent>().Add(new OrderShipmentEvent
+            {
+                OrderId = order.Id,
+                Provider = "GHN",
+                Status = status,
+                Type = "simulate",
+                OccurredAt = DateTimeOffset.UtcNow
+            });
+            await _db.SaveChangesAsync(ct);
+        }
+
+        public async Task<Entities.Enum.OrderStatus> AdvanceOrderOnlyAsync(Guid orderId, CancellationToken ct = default)
+        {
+            var order = await _db.Set<Order>().FirstOrDefaultAsync(o => o.Id == orderId, ct)
+                ?? throw new Exception("Order not found");
+
+            var current = order.OrderStatus;
+            Entities.Enum.OrderStatus next = current;
+
+            switch (current)
+            {
+                case Entities.Enum.OrderStatus.Created:
+                    next = Entities.Enum.OrderStatus.Paid;
+                    break;
+                case Entities.Enum.OrderStatus.Paid:
+                    next = Entities.Enum.OrderStatus.Shipping;
+                    break;
+                case Entities.Enum.OrderStatus.Shipping:
+                    next = Entities.Enum.OrderStatus.Completed;
+                    break;
+                case Entities.Enum.OrderStatus.Completed:
+                case Entities.Enum.OrderStatus.Fail:
+                    next = current;
+                    break;
+            }
+
+            if (next != current)
+            {
+                order.OrderStatus = next;
+                await _db.SaveChangesAsync(ct);
+            }
+
+            return next;
         }
     }
 }
