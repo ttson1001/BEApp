@@ -34,7 +34,6 @@ builder.Services.Configure<EmailSettings>(
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("AppSettings"));
 builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VNPAY"));
-builder.Services.Configure<AgoraSettings>(builder.Configuration.GetSection("AGORA"));
 builder.Services.AddDbContext<BeContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpClient<GhnClient>();

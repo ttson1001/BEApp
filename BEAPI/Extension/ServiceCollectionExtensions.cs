@@ -36,7 +36,6 @@ namespace BEAPI.Extension
             services.AddScoped<IPromotionService, PromotionService>();
             services.AddScoped<IWalletService, WalletService>();
             services.AddScoped<IPaymentHistoryService, PaymentHistoryService>();
-            services.AddScoped<IAgoraService, AgoraService>();
             services.AddScoped<ShippingService>();
             services.AddScoped<VNPayService>();
         }
