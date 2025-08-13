@@ -58,6 +58,7 @@ namespace BEAPI.Controllers
                     .ToDictionary(x => x[0], x => x[1]);
 
                 var type = infoDict.GetValueOrDefault("Type");
+                var status = vnp_ResponseCode == "00" ? "success" : (vnp_ResponseCode == "24" ? "cancel" : "fail");
                 if (string.Equals(type, "WalletTopUp", StringComparison.OrdinalIgnoreCase))
                 {
                     var userIdStr = infoDict.GetValueOrDefault("UserId");
@@ -65,26 +66,21 @@ namespace BEAPI.Controllers
                     var userId = GuidHelper.ParseOrThrow(userIdStr, nameof(userIdStr));
                     _ = decimal.TryParse(amountStr, out var amount);
 
-                    if (vnp_ResponseCode == "00")
+                    if (status == "success")
                     {
                         await _walletService.TopUp(userId, amount);
-                        return Content($@"
-            <html>
-                <head><meta charset='UTF-8'></head>
-                <body>
-                    <h2>🎉 Nạp ví thành công!</h2>
-                    <p>Số tiền: {amount:n0} VND</p>
-                    <a href='http://localhost:3000/'>Quay lại ứng dụng</a>
-                </body>
-            </html>", "text/html");
                     }
+                    var deepLink = $"silvercart://payment/callback?status={status}";
                     return Content($@"
             <html>
-                <head><meta charset='UTF-8'></head>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta http-equiv='refresh' content='0;url={deepLink}'>
+                    <script>window.location.href='{deepLink}';</script>
+                </head>
                 <body>
-                    <h2>❌ Nạp ví thất bại!</h2>
-                    <p>Mã lỗi: {vnp_ResponseCode}</p>
-                    <a href='http://localhost:3000/'>Thử lại</a>
+                    <p>Redirecting...</p>
+                    <a href='{deepLink}'>Tap here if not redirected</a>
                 </body>
             </html>", "text/html");
                 }
@@ -100,27 +96,18 @@ namespace BEAPI.Controllers
                         Note = note
                     };
 
-                    await _service.CreateOrderAsync(dto, vnp_ResponseCode == "00");
-
-                    if (vnp_ResponseCode == "00")
-                    {
-                        return Content($@"
-            <html>
-                <head><meta charset='UTF-8'></head>
-                <body>
-                    <h2>🎉 Thanh toán thành công!</h2>
-                    <p>Mã giao dịch: {cartId}</p>
-                    <a href='http://localhost:3000/'>Quay lại cửa hàng</a>
-                </body>
-            </html>", "text/html");
-                    }
+                    await _service.CreateOrderAsync(dto, status == "success");
+                    var deepLink = $"silvercart://payment/callback?status={status}";
                     return Content($@"
             <html>
-                <head><meta charset='UTF-8'></head>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta http-equiv='refresh' content='0;url={deepLink}'>
+                    <script>window.location.href='{deepLink}';</script>
+                </head>
                 <body>
-                    <h2>❌ Thanh toán thất bại!</h2>
-                    <p>Mã lỗi: {vnp_ResponseCode}</p>
-                    <a href='http://localhost:3000/'>Thử lại</a>
+                    <p>Redirecting...</p>
+                    <a href='{deepLink}'>Tap here if not redirected</a>
                 </body>
             </html>", "text/html");
                 }
