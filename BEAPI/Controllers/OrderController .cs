@@ -122,45 +122,5 @@ namespace BEAPI.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-
-        [HttpPost("{orderId:guid}/ship/ghn")]
-        public async Task<IActionResult> ShipWithGhn(Guid orderId, [FromServices] BEAPI.Services.Shipping.ShippingService ship)
-        {
-            try
-            {
-                await ship.CreateGhnShipmentForOrderAsync(orderId);
-                return Ok(new { message = "Created GHN shipment" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        [HttpGet("{orderId:guid}/shipment")]
-        public async Task<IActionResult> GetShipment(Guid orderId, [FromServices] BEAPI.Services.Shipping.ShippingService ship,
-                                             [FromServices] BEAPI.Database.BeContext db)
-        {
-            var order = await ship.GetOrderWithShipmentAsync(orderId);
-            if (order == null) return NotFound(new { message = "Order not found" });
-
-            var timeline = order.ShipmentEvents
-                .OrderBy(x => x.OccurredAt)
-                .Select(x => new { x.Status, x.Type, x.Reason, x.OccurredAt })
-                .ToList();
-
-            return Ok(new
-            {
-                order.Id,
-                order.ShippingProvider,
-                order.ShippingServiceId,
-                order.ShippingFee,
-                order.ShippingCode,
-                order.ShippingStatus,
-                order.ExpectedDeliveryTime,
-                timeline
-            });
-        }
-
     }
 }

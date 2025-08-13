@@ -20,6 +20,7 @@ namespace BEAPI.Entities
         public int DistrictID { get; set; }
         public string DistrictName { get; set; } = string.Empty;
         public int ProvinceID { get; set; }
+        public int Discount { get; set; }
         public string ProvinceName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
 

@@ -13,7 +13,7 @@ namespace BEAPI.Services
     public class OrderService : IOrderService
     {
         private readonly IRepository<Order> _orderRepo;
-        private readonly IRepository<ProductVariant> _productVariantRepo;
+        private readonly IRepository<UserPromotion> _userPromotionRepo;
         private readonly IRepository<PaymentHistory> _paymentHistoryRepo;
         private readonly IRepository<User> _userRepo;
         private readonly IRepository<Cart> _cartRepo;
@@ -21,43 +21,36 @@ namespace BEAPI.Services
         private readonly IMapper _mapper;
 
         public OrderService(IRepository<Order> orderRepo,
-                            IRepository<ProductVariant> productVariantRepo,
                             IRepository<User> userRepo,
                             IRepository<Cart> cartRepo,
                             IRepository<Address> addressRepo,
                             IRepository<PaymentHistory> paymentHistoryRepo,
+                            IRepository<UserPromotion> userPromotionRepo,
                             IMapper mapper)
         {
             _orderRepo = orderRepo;
-            _productVariantRepo = productVariantRepo;
             _userRepo = userRepo;
             _cartRepo = cartRepo;
             _mapper = mapper;
             _paymentHistoryRepo = paymentHistoryRepo;
             _addressRepo = addressRepo;
+            _userPromotionRepo = userPromotionRepo;
         }
+
         public async Task CreateOrderAsync(OrderCreateDto dto, bool isPaid)
         {
-            var cartId = GuidHelper.ParseOrThrow(dto.CartId, nameof(dto.CartId));
+            var cart = await GetPendingCartAsync(dto.CartId);
+            var userPromotion = await ValidateAndGetPromotionAsync(dto.UserPromotionId, cart.CustomerId);
 
-            var cart = await _cartRepo.Get()
-                .Include(x => x.Items)
-                    .ThenInclude(x => x.ProductVariant)
-                        .ThenInclude(x => x.Product)
-                .FirstOrDefaultAsync(u => u.Id == cartId && u.Status == CartStatus.Pending)
-                ?? throw new Exception("Cart not found or not in pending status");
+            var orderDetails = BuildOrderDetails(cart);
+            var address = await GetDefaultAddressAsync();
 
-            var price = cart.Items.Sum(x => x.ProductPrice);
+            var subTotal = orderDetails.Sum(d => d.Price * d.Quantity);
+            var itemDiscountAmount = CalculateItemDiscount(orderDetails);
+            var promoDiscountAmount = CalculatePromotionDiscount(userPromotion?.Promotion, subTotal - itemDiscountAmount);
 
-            var orderDetails = cart.Items.Select(x => new OrderDetail
-            {
-                ProductVariant = x.ProductVariant,
-                Price = x.ProductPrice,
-                Quantity = x.Quantity,
-                ProductName = x.ProductVariant.Product?.Name ?? "",
-            }).ToList();
-
-            var address = _addressRepo.Get().First();
+            var total = subTotal - itemDiscountAmount - promoDiscountAmount;
+            if (total < 0) total = 0;
 
             var order = new Order
             {
@@ -65,19 +58,22 @@ namespace BEAPI.Services
                 ElderId = cart.ElderId,
                 Note = dto.Note,
                 OrderStatus = isPaid ? OrderStatus.Paid : OrderStatus.Fail,
-                TotalPrice = price,
+                TotalPrice = total,
                 OrderDetails = orderDetails,
                 DistrictID = address.DistrictID,
                 DistrictName = address.DistrictName,
                 WardCode = address.WardCode,
                 WardName = address.WardName,
+                PhoneNumber = address.PhoneNumber,
+                StreetAddress = address.StreetAddress,
                 ProvinceID = address.ProvinceID,
-                ProvinceName = address.ProvinceName
+                ProvinceName = address.ProvinceName,
+                Discount = userPromotion?.Promotion?.DiscountPercent ?? 0
             };
 
-            cart.Status = isPaid ? CartStatus.Approve : CartStatus.Pending;
-
             await _orderRepo.AddAsync(order);
+
+            cart.Status = isPaid ? CartStatus.Approve : CartStatus.Pending;
 
             if (isPaid)
             {
@@ -85,7 +81,7 @@ namespace BEAPI.Services
 
                 var payment = new PaymentHistory
                 {
-                    Amount = price,
+                    Amount = total,
                     OrderId = order.Id,
                     UserId = cart.CustomerId,
                     PaymentMenthod = "VNPay",
@@ -96,123 +92,83 @@ namespace BEAPI.Services
                 var user = await _userRepo.Get().FirstOrDefaultAsync(u => u.Id == cart.CustomerId);
                 if (user != null)
                 {
-                    var pointEarned = (int)(price / 1000);
+                    var pointEarned = (int)(total / 1000);
                     user.RewardPoint += pointEarned;
+                }
+
+                if (userPromotion != null)
+                {
+                    userPromotion.IsUsed = true;
+                    _userPromotionRepo.Update(userPromotion);
                 }
             }
 
             await _orderRepo.SaveChangesAsync();
         }
 
-        //public async Task CreateOrderAsync(OrderCreateDto dto, bool isPaid)
-        //{
-        //    var cartId = GuidHelper.ParseOrThrow(dto.CartId, nameof(dto.CartId));
+        private async Task<Cart> GetPendingCartAsync(string cartId)
+        {
+            var id = GuidHelper.ParseOrThrow(cartId, nameof(cartId));
+            return await _cartRepo.Get()
+                .Include(x => x.Items)
+                    .ThenInclude(x => x.ProductVariant)
+                        .ThenInclude(x => x.Product)
+                .FirstOrDefaultAsync(u => u.Id == id && u.Status == CartStatus.Pending)
+                ?? throw new Exception("Cart not found or not in pending status");
+        }
 
-        //    var cart = await _cartRepo.Get()
-        //        .Include(x => x.Items)
-        //            .ThenInclude(x => x.ProductVariant)
-        //                .ThenInclude(x => x.Product)
-        //        .FirstOrDefaultAsync(u => u.Id == cartId && u.Status == CartStatus.Pending)
-        //        ?? throw new Exception("Cart not found or not in pending status");
+        private async Task<UserPromotion?> ValidateAndGetPromotionAsync(string? userPromotionId, Guid customerId)
+        {
+            if (string.IsNullOrWhiteSpace(userPromotionId) || !Guid.TryParse(userPromotionId, out var upId))
+                return null;
 
-        //    UserPromotion? userPromo = null;
-        //    Promotion? promo = null;
-        //    if (dto.PromotionId.HasValue)
-        //    {
-        //        userPromo = await _userPromoRepo.Get()
-        //            .Include(up => up.Promotion)
-        //            .FirstOrDefaultAsync(up =>
-        //                up.UserId == cart.CustomerId &&
-        //                up.PromotionId == dto.PromotionId.Value &&
-        //                !up.IsUsed);
+            var userPromotion = await _userPromotionRepo.Get()
+                .Include(up => up.Promotion)
+                .FirstOrDefaultAsync(up => up.Id == upId)
+                ?? throw new Exception("UserPromotion not found");
 
-        //        promo = userPromo?.Promotion ?? throw new Exception("Promotion invalid or already used");
+            if (userPromotion.UserId != customerId)
+                throw new Exception("Promotion does not belong to this user");
+            if (userPromotion.IsUsed)
+                throw new Exception("Promotion was already used");
 
-        //        var now = DateTimeOffset.UtcNow;
-        //        if (!promo.IsActive || (promo.StartAt.HasValue && now < promo.StartAt.Value) || (promo.EndAt.HasValue && now > promo.EndAt.Value))
-        //            throw new Exception("Promotion not available");
+            var now = DateTimeOffset.UtcNow;
+            var promo = userPromotion.Promotion;
+            if (!promo.IsActive) throw new Exception("Promotion is inactive");
+            if (promo.StartAt.HasValue && promo.StartAt.Value > now) throw new Exception("Promotion not started yet");
+            if (promo.EndAt.HasValue && promo.EndAt.Value < now) throw new Exception("Promotion expired");
 
-        //        if (promo.DiscountPercent < 0 || promo.DiscountPercent > 100)
-        //            throw new Exception("Invalid discount percent");
-        //    }
+            return userPromotion;
+        }
 
-        //    decimal multiplier = 1m;
-        //    if (promo != null) multiplier = 1m - (promo.DiscountPercent / 100m);
+        private List<OrderDetail> BuildOrderDetails(Cart cart)
+        {
+            return cart.Items.Select(x => new OrderDetail
+            {
+                ProductVariant = x.ProductVariant,
+                Price = x.ProductPrice,
+                Quantity = x.Quantity,
+                Discount = x.Discount > 0 ? x.Discount : x.ProductVariant.Discount,
+                ProductName = x.ProductVariant.Product?.Name ?? string.Empty
+            }).ToList();
+        }
 
-        //    var orderDetails = cart.Items.Select(x =>
-        //    {
-        //        bool applicable = promo?.ApplicableProductId == null
-        //                          || promo.ApplicableProductId == x.ProductVariant.ProductId;
+        private async Task<Address> GetDefaultAddressAsync()
+        {
+            return await _addressRepo.Get().FirstAsync();
+        }
 
-        //        var price = x.ProductPrice;
-        //        if (promo != null && applicable)
-        //            price = Math.Round(price * multiplier, 2);
+        private decimal CalculateItemDiscount(List<OrderDetail> orderDetails)
+        {
+            return orderDetails.Sum(d => (decimal)d.Discount / 100m * d.Price * d.Quantity);
+        }
 
-        //        return new OrderDetail
-        //        {
-        //            ProductVariant = x.ProductVariant,
-        //            Price = price,
-        //            Quantity = x.Quantity,
-        //            ProductName = x.ProductVariant.Product?.Name ?? "",
-        //        };
-        //    }).ToList();
-
-        //    var address = _addressRepo.Get().First(); // TODO: chọn đúng địa chỉ của user
-
-        //    var total = orderDetails.Sum(d => d.Price * d.Quantity);
-
-        //    var order = new Order
-        //    {
-        //        CustomerId = cart.CustomerId,
-        //        ElderId = cart.ElderId,
-        //        Note = dto.Note,
-        //        OrderStatus = isPaid ? OrderStatus.Paid : OrderStatus.Fail,
-        //        TotalPrice = total,
-        //        OrderDetails = orderDetails,
-        //        DistrictID = address.DistrictID,
-        //        DistrictName = address.DistrictName,
-        //        WardCode = address.WardCode,
-        //        WardName = address.WardName,
-        //        ProvinceID = address.ProvinceID,
-        //        ProvinceName = address.ProvinceName
-        //    };
-
-        //    await _orderRepo.AddAsync(order);
-
-        //    cart.Status = isPaid ? CartStatus.Approve : CartStatus.Pending;
-
-        //    if (isPaid)
-        //    {
-        //        DeductStockFromCart(cart);
-
-        //        await _paymentHistoryRepo.AddAsync(new PaymentHistory
-        //        {
-        //            Amount = total,
-        //            OrderId = order.Id,
-        //            UserId = cart.CustomerId,
-        //            PaymentMenthod = "VNPay",
-        //            paymentStatus = PaymentStatus.Success
-        //        });
-
-        //        var user = await _userRepo.Get().FirstOrDefaultAsync(u => u.Id == cart.CustomerId);
-        //        if (user != null)
-        //        {
-        //            user.RewardPoint += (int)(total / 1000); // 1 điểm cho mỗi 1000đ
-        //            _userRepo.Update(user);
-        //        }
-
-        //        if (userPromo != null)
-        //        {
-        //            userPromo.IsUsed = true;
-        //            userPromo.UsedAt = DateTimeOffset.UtcNow;
-        //            _userPromoRepo.Update(userPromo);
-        //        }
-        //    }
-
-        //    // Nếu tất cả repository share cùng DbContext: 1 lần save là đủ
-        //    await _orderRepo.SaveChangesAsync();
-        //}
-
+        private decimal CalculatePromotionDiscount(Promotion? promo, decimal baseAmount)
+        {
+            if (promo == null) return 0m;
+            if (baseAmount <= 0) return 0m;
+            return (decimal)promo.DiscountPercent / 100m * baseAmount;
+        }
 
         private void DeductStockFromCart(Cart cart)
         {
@@ -234,8 +190,6 @@ namespace BEAPI.Services
                 }
             }
         }
-
-
         public async Task<List<OrderDto>> GetOrdersByCustomerIdAsync(string userId)
         {
             var customerId = GuidHelper.ParseOrThrow(userId, "CustomerId");

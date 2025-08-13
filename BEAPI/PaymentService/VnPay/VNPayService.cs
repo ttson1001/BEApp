@@ -11,31 +11,54 @@ namespace BEAPI.PaymentService.VnPay
 {
     public class VNPayService
     {
+        private readonly IRepository<UserPromotion> _userPromotionRepo;
         private readonly VnPaySettings _settings;
         private readonly IRepository<Cart> _repository;
 
-        public VNPayService(IOptions<VnPaySettings> options, IRepository<Cart> repository)
+        public VNPayService(IOptions<VnPaySettings> options, IRepository<UserPromotion> userPromotionRepo, IRepository<Cart> repository)
         {
             _settings = options.Value;
             _repository = repository;
+            _userPromotionRepo = userPromotionRepo;
         }
 
         public string VNPay(HttpContext context, VnPayRequest vnPayRequest)
         {
             var createdDate = DateTime.Now;
             var orderId = DateTime.Now.Ticks;
+
             var cartId = GuidHelper.ParseOrThrow(vnPayRequest.CartId, nameof(vnPayRequest.CartId));
             var cart = ValidateCart(cartId);
-            var total = cart.Items.Sum(i => i.ProductPrice);
-            var orderInfo = $"CartId={vnPayRequest.CartId};AddressId={vnPayRequest.AddressId};Note={vnPayRequest.Note}";
-            VnPayLib vnpay = new VnPayLib();
 
+            var subTotal = cart.Items.Sum(i => i.ProductPrice * i.Quantity);
+
+            decimal itemDiscountAmount = cart.Items.Sum(i =>
+            {
+                var percent = i.Discount > 0 ? i.Discount : i.ProductVariant.Discount;
+                return (decimal)percent / 100m * i.ProductPrice * i.Quantity;
+            });
+
+            var userPromotion = ValidateAndGetPromotion(vnPayRequest.UserPromotionId, cart.CustomerId);
+
+            decimal baseAfterItemDiscount = subTotal - itemDiscountAmount;
+            if (baseAfterItemDiscount < 0) baseAfterItemDiscount = 0;
+
+            int promoPercent = userPromotion?.Promotion?.DiscountPercent ?? 0;
+            decimal promoDiscountAmount = (decimal)promoPercent / 100m * baseAfterItemDiscount;
+
+            decimal total = baseAfterItemDiscount - promoDiscountAmount;
+            if (total < 0) total = 0;
+
+            long vnpAmount = (long)Math.Round(total * 100m, MidpointRounding.AwayFromZero);
+
+            var orderInfo = $"CartId={vnPayRequest.CartId};AddressId={vnPayRequest.AddressId};Note={vnPayRequest.Note};UserPromotionId={vnPayRequest.UserPromotionId}";
+
+            VnPayLib vnpay = new VnPayLib();
             vnpay.AddRequestData("vnp_Version", VnPayLib.VERSION);
             vnpay.AddRequestData("vnp_Command", "pay");
             vnpay.AddRequestData("vnp_TmnCode", _settings.TmCode);
-            vnpay.AddRequestData("vnp_Amount", ((long)(total * 100)).ToString());
+            vnpay.AddRequestData("vnp_Amount", vnpAmount.ToString());
             vnpay.AddRequestData("vnp_BankCode", "VNBANK");
-
             vnpay.AddRequestData("vnp_CreateDate", createdDate.ToString("yyyyMMddHHmmss"));
             vnpay.AddRequestData("vnp_CurrCode", "VND");
             vnpay.AddRequestData("vnp_IpAddr", Utils.GetIpAddress(context));
@@ -48,6 +71,31 @@ namespace BEAPI.PaymentService.VnPay
             string paymentUrl = vnpay.CreateRequestUrl(_settings.BaseUrl, _settings.HashSecret);
             return paymentUrl;
         }
+
+        private UserPromotion? ValidateAndGetPromotion(string? userPromotionId, Guid customerId)
+        {
+            if (string.IsNullOrWhiteSpace(userPromotionId) || !Guid.TryParse(userPromotionId, out var upId))
+                return null;
+
+            var userPromotion = _userPromotionRepo.Get()
+                .Include(up => up.Promotion)
+                .FirstOrDefault(up => up.Id == upId)
+                ?? throw new Exception("UserPromotion not found");
+
+            if (userPromotion.UserId != customerId)
+                throw new Exception("Promotion does not belong to this user");
+            if (userPromotion.IsUsed)
+                throw new Exception("Promotion was already used");
+
+            var now = DateTimeOffset.UtcNow;
+            var promo = userPromotion.Promotion;
+            if (!promo.IsActive) throw new Exception("Promotion is inactive");
+            if (promo.StartAt.HasValue && promo.StartAt.Value > now) throw new Exception("Promotion not started yet");
+            if (promo.EndAt.HasValue && promo.EndAt.Value < now) throw new Exception("Promotion expired");
+
+            return userPromotion;
+        }
+
 
         private Cart ValidateCart(Guid cartId)
         {
