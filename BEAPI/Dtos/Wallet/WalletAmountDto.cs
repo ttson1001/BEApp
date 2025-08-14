@@ -5,6 +5,11 @@ namespace BEAPI.Dtos.Wallet
         public string UserId { get; set; }
         public decimal Amount { get; set; }
     }
+
+    public class GetWalletAmountDto
+    {
+        public string UserId { get; set; }
+    }
 }
 
 

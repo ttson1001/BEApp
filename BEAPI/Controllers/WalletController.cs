@@ -51,6 +51,21 @@ namespace BEAPI.Controllers
                 return BadRequest(new ResponseDto { Message = ex.Message, Data = null });
             }
         }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetAmount([FromQuery] string userId)
+        {
+            try
+            {
+                var userIdGuid = GuidHelper.ParseOrThrow(userId, nameof(userId));
+                var amount = await _walletService.GetAmount(userIdGuid);
+                return Ok(new ResponseDto { Message = "Wallet amount retrieved successfully", Data = new { Amount = amount } });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message, Data = null });
+            }
+        }
     }
 }
 

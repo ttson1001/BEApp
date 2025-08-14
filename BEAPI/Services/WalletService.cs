@@ -57,5 +57,21 @@ namespace BEAPI.Services
             await _repository.SaveChangesAsync(ct);
             return wallet.Amount;
         }
+
+        public async Task<decimal> GetAmount(Guid userId, CancellationToken ct = default)
+        {
+            var wallet = await _repository.Get().FirstOrDefaultAsync(w => w.UserId == userId, ct);
+            if (wallet == null)
+            {
+                wallet = new Wallet
+                {
+                    UserId = userId,
+                    Amount = 0
+                };
+                await _repository.AddAsync(wallet, ct);
+                await _repository.SaveChangesAsync(ct);
+            }
+            return wallet.Amount;
+        }
     }
 }
