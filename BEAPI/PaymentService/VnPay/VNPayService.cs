@@ -131,12 +131,16 @@ namespace BEAPI.PaymentService.VnPay
 
         private Cart ValidateCart(Guid cartId)
         {
-            var cart =  _repository.Get()
+            var cart = _repository.Get()
                 .Include(x => x.Items)
                     .ThenInclude(x => x.ProductVariant)
                         .ThenInclude(x => x.Product)
-                .FirstOrDefault(u => u.Id == cartId && u.Status == CartStatus.Pending)
+                .FirstOrDefault(u =>
+                    u.Id == cartId &&
+                    (u.ElderId != null ? u.Status == CartStatus.Pending : true)
+                )
                 ?? throw new Exception("Cart not found or not in pending status");
+
 
             if (!cart.Items.Any())
                 throw new Exception("Cart is empty");
