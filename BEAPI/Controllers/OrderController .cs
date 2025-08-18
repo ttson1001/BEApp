@@ -1,11 +1,7 @@
-﻿using BEAPI.Dtos.Common;
-using BEAPI.Dtos.Order;
-using BEAPI.Entities;
+﻿using BEAPI.Dtos.Order;
 using BEAPI.Services.IServices;
 using BEAPI.Helper;
 using BEAPI.PaymentService.VnPay;
-using BEAPI.Services;
-using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -160,5 +156,14 @@ namespace BEAPI.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("[action]/{id}")]
+        public async Task<IActionResult> GetById(string id)
+        {
+            var order = await _service.GetOrderByIdAsync(id);
+            if (order == null) return NotFound();
+            return Ok(order);
+        }
+
     }
 }

@@ -9,5 +9,6 @@ namespace BEAPI.Services.IServices
         Task CreateOrderByWalletAsync(OrderCreateDto dto);
         Task<List<OrderDto>> GetOrdersByCustomerIdAsync(string userId);
         Task<PagedResult<OrderDto>> FilterOrdersAsync(OrderFilterDto request);
+        Task<OrderDto?> GetOrderByIdAsync(string orderId);
     }
 }

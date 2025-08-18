@@ -241,6 +241,62 @@ namespace BEAPI.Services
 
             return _mapper.Map<List<OrderDto>>(orders);
         }
+        public async Task<OrderDto?> GetOrderByIdAsync(string orderId)
+        {
+            var id = GuidHelper.ParseOrThrow(orderId, nameof(orderId));
+
+            var order = await _orderRepo.Get()
+                  .Include(o => o.OrderDetails)
+                      .ThenInclude(od => od.ProductVariant)
+                          .ThenInclude(pv => pv.Product)
+                  .Include(o => o.OrderDetails)
+                      .ThenInclude(od => od.ProductVariant)
+                          .ThenInclude(pv => pv.ProductImages)
+                  .Include(o => o.OrderDetails)
+                      .ThenInclude(od => od.ProductVariant)
+                          .ThenInclude(pv => pv.ProductVariantValues)
+                              .ThenInclude(pvv => pvv.Value)
+                  .Include(o => o.Elder)
+                  .Include(o => o.Customer)
+                  .FirstOrDefaultAsync(o => o.Id == id);
+
+
+            if (order == null) return null;
+
+            var orderDto = new OrderDto
+            {
+                Id = order.Id,
+                Note = order.Note ?? string.Empty,
+                TotalPrice = order.TotalPrice,
+                Discount = order.Discount,
+                OrderStatus = order.OrderStatus.ToString(),
+                PhoneNumber = order.Customer?.PhoneNumber ?? string.Empty,
+                StreetAddress = order.StreetAddress ?? string.Empty,
+                WardName = order.WardName ?? string.Empty,
+                DistrictName = order.DistrictName ?? string.Empty,
+                ProvinceName = order.ProvinceName ?? string.Empty,
+                CustomerName = order.Customer?.FullName ?? string.Empty,
+                ElderName = order.Elder?.FullName ?? string.Empty,
+                OrderDetails = order.OrderDetails.Select(od => new OrderDetailDto
+                {
+                    Id = od.Id,
+                    ProductName = od.ProductVariant?.Product?.Name ?? string.Empty,
+                    Price = od.Price,
+                    Quantity = od.Quantity,
+                    Discount = od.Discount,
+                    Style = string.Join(", ",
+                        od.ProductVariant?.ProductVariantValues
+                            .Select(pvv => pvv.Value?.Label)
+                            .Where(s => !string.IsNullOrWhiteSpace(s)) ?? new List<string>()
+                    ),
+                    Images = od.ProductVariant?.ProductImages?
+                        .Select(img => img.URL)
+                        .ToList() ?? new List<string>()
+                }).ToList()
+            };
+
+            return orderDto;
+        }
 
         public async Task<PagedResult<OrderDto>> FilterOrdersAsync(OrderFilterDto request)
         {
