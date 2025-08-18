@@ -13,7 +13,6 @@ namespace BEAPI.Services.Shipping
         private readonly GhnOptions _opt;
         private readonly ILogger<ShippingService> _logger;
 
-        // ====== ĐÓNG GÓI MẶC ĐỊNH (hard-code) ======
         private const int W_DEFAULT = 1000; // gram
         private const int L_DEFAULT = 20;   // cm
         private const int WIDTH_DEF = 15;   // cm
@@ -180,9 +179,6 @@ namespace BEAPI.Services.Shipping
         }
 
 
-        /// <summary>
-        /// Đồng bộ trạng thái GHN về DB.
-        /// </summary>
         public async Task<string> SyncShipmentStatusAsync(Guid orderId, CancellationToken ct = default)
         {
             var order = await _db.Set<Order>().FirstOrDefaultAsync(o => o.Id == orderId, ct)
@@ -201,9 +197,6 @@ namespace BEAPI.Services.Shipping
             return ghnStatus;
         }
 
-        /// <summary>
-        /// Hủy đơn GHN (nếu GHN cho phép), lưu event.
-        /// </summary>
         public async Task CancelShipmentAsync(Guid orderId, string? note = null, CancellationToken ct = default)
         {
             var order = await _db.Set<Order>().FirstOrDefaultAsync(o => o.Id == orderId, ct)
@@ -217,10 +210,6 @@ namespace BEAPI.Services.Shipping
             AddEvent(order.Id, "cancelled", "cancel");
             await _db.SaveChangesAsync(ct);
         }
-
-        // ====================================================================
-        // ====== NHÓM HÀM "NÂNG CAO" – GIỮ NGUYÊN CHỮ KÝ CŨ (KHÔNG GÃY) ======
-        // ====================================================================
 
         public async Task<decimal> RecalcShippingFeeAsync(Guid orderId, int serviceId, CancellationToken ct = default)
         {
