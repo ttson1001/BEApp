@@ -151,6 +151,7 @@ namespace BEAPI.Services.Shipping
             order.ShippingCode = code;
             order.ExpectedDeliveryTime = etd;
             order.ShippingStatus = "created";
+            order.OrderStatus = Entities.Enum.OrderStatus.PendingConfirm;
 
             AddEvent(order.Id, "created", "create");
             await _db.SaveChangesAsync(ct);
@@ -330,22 +331,42 @@ namespace BEAPI.Services.Shipping
                 ?? throw new Exception("Order not found");
 
             var current = order.OrderStatus;
-            Entities.Enum.OrderStatus next = current;
+            var next = current;
 
             switch (current)
             {
                 case Entities.Enum.OrderStatus.Created:
                     next = Entities.Enum.OrderStatus.Paid;
                     break;
+
                 case Entities.Enum.OrderStatus.Paid:
+                    next = Entities.Enum.OrderStatus.PendingConfirm;
+                    break;
+
+                case Entities.Enum.OrderStatus.PendingConfirm:
+                    next = Entities.Enum.OrderStatus.PendingPickup;
+                    break;
+
+                case Entities.Enum.OrderStatus.PendingPickup:
+                    next = Entities.Enum.OrderStatus.PendingDelivery;
+                    break;
+
+                case Entities.Enum.OrderStatus.PendingDelivery:
                     next = Entities.Enum.OrderStatus.Shipping;
                     break;
+
                 case Entities.Enum.OrderStatus.Shipping:
+                    next = Entities.Enum.OrderStatus.Delivered;
+                    break;
+
+                case Entities.Enum.OrderStatus.Delivered:
                     next = Entities.Enum.OrderStatus.Completed;
                     break;
+
                 case Entities.Enum.OrderStatus.Completed:
+                case Entities.Enum.OrderStatus.Canceled:
                 case Entities.Enum.OrderStatus.Fail:
-                    next = current;
+                    next = current; // không advance nữa
                     break;
             }
 
