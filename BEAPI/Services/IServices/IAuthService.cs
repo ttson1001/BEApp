@@ -6,7 +6,7 @@ namespace BEAPI.Services.IServices
     public interface IAuthService
     {
         Task RegisterAsync (RegisterDto registerDto);
-        Task<string> LoginAsync(LoginDto dto);
+        Task<(string Token, User User)> LoginAsync(LoginDto dto);
         Task<User> FindUserByEmailOrPhoneAsync(string emailOrPhone);
         Task ResetPasswordAsync(ResetPasswordDto request);
         Task VerifyUserAsync(string otp);

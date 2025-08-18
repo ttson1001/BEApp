@@ -51,7 +51,7 @@ namespace BEAPI.Services
             return user == null ? throw new KeyNotFoundException("User not found") : user;
         }
 
-        public async Task<string> LoginAsync(LoginDto dto)
+        public async Task<(string Token, User User)> LoginAsync(LoginDto dto)
         {
             var user = await _userRepo.Get().Include(x => x.Role).FirstOrDefaultAsync(u => u.UserName == dto.UserName || u.Email == dto.UserName) ?? throw new KeyNotFoundException("User not found");
             if (!user.IsVerified)
@@ -62,14 +62,15 @@ namespace BEAPI.Services
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 throw new Exception(ExceptionConstant.InvalidCredentials);
 
-            return _jwtService.GenerateToken(user, null);
+            var token = _jwtService.GenerateToken(user, null);
+            return (token, user);
         }
 
         public async Task ResetPasswordAsync(ResetPasswordDto request)
         {
             var user = await _userRepo.Get()
                 .FirstOrDefaultAsync(u => u.OtpCode == request.Otp)
-                ?? throw new Exception("OTP không hợp lệ.");
+                ?? throw new Exception("OTP invalid.");
 
             await _otpService.VerifyOtpAsync(user, request.Otp);
 
@@ -82,7 +83,7 @@ namespace BEAPI.Services
         {
             var user = await _userRepo.Get()
                 .FirstOrDefaultAsync(u => u.OtpCode == otp)
-                ?? throw new Exception("OTP không hợp lệ.");
+                ?? throw new Exception("OTP invalid.");
 
             await _otpService.VerifyUserAsync(user, otp);
 

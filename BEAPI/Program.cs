@@ -1,5 +1,7 @@
 ﻿using BEAPI.Database;
 using BEAPI.Extension;
+using BEAPI.Hubs;
+using BEAPI.Middleware;
 using BEAPI.Model;
 using BEAPI.Services;
 using BEAPI.Services.IServices;
@@ -28,6 +30,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add SignalR
+builder.Services.AddSignalR();
 
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
@@ -124,7 +129,13 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseAutoSignalR();
+
+app.UseUserActivityTracking();
+
 app.MapControllers();
+
+app.MapHub<UserOnlineHub>("/hubs/useronline");
 
 app.Run();
 

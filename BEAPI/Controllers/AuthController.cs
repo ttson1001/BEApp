@@ -3,9 +3,11 @@ using BEAPI.Dtos.Auth;
 using BEAPI.Dtos.Common;
 using BEAPI.Entities;
 using BEAPI.Exceptions;
+using BEAPI.Hubs;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace BEAPI.Controllers
 {
@@ -15,11 +17,13 @@ namespace BEAPI.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IOtpService _otpService;
+        private readonly IHubContext<UserOnlineHub> _hubContext;
 
-        public AuthController(IAuthService authService, IOtpService otpService)
+        public AuthController(IAuthService authService, IOtpService otpService, IHubContext<UserOnlineHub> hubContext)
         {
             _authService = authService;
             _otpService = otpService;
+            _hubContext = hubContext;
         }
 
 
@@ -117,13 +121,14 @@ namespace BEAPI.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-
             var response = new ResponseDto();
             try
             {
-                var token = await _authService.LoginAsync(dto);
+                var (token, user) = await _authService.LoginAsync(dto);
                 response.Data = token;
                 response.Message = MessageConstants.LoginSuccess;
+
+                await AutoConnectUserToSignalR(user);
 
                 return Ok(response);
             }
@@ -137,6 +142,30 @@ namespace BEAPI.Controllers
             }
         }
 
+        private async Task AutoConnectUserToSignalR(User user)
+        {
+            try
+            {
+                var userInfo = new UserOnlineHub.UserConnectionInfo
+                {
+                    UserId = user.Id.ToString(),
+                    UserName = user.UserName ?? user.FullName,
+                    ConnectedAt = DateTime.UtcNow,
+                    LastActivity = DateTime.UtcNow
+                };
+
+                UserOnlineHub.AddUserToOnlineList(userInfo);
+
+                await _hubContext.Clients.All.SendAsync("UserOnline", userInfo.UserId, userInfo.UserName);
+
+                Console.WriteLine($"Auto-connected user {userInfo.UserName} ({userInfo.UserId}) to SignalR after login");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error auto-connecting user to SignalR: {ex.Message}");
+            }
+        }
+
         [Authorize]
         [HttpGet("[action]")]
         public IActionResult Me()
@@ -147,6 +176,47 @@ namespace BEAPI.Controllers
                 userName = User.FindFirst("UserName")?.Value,
                 role = User.FindFirst("Role")?.Value
             });
+        }
+
+        [Authorize]
+        [HttpPost("[action]")]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                var userId = User.FindFirst("UserId")?.Value;
+                var userName = User.FindFirst("UserName")?.Value;
+
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    await AutoDisconnectUserFromSignalR(userId, userName);
+                }
+
+                return Ok(new ResponseDto { Message = "Logout successful" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
+        private async Task AutoDisconnectUserFromSignalR(string userId, string userName)
+        {
+            try
+            {
+                if (UserOnlineHub.IsUserOnline(userId))
+                {
+                    UserOnlineHub.RemoveUserFromOnlineList(userId);
+                    
+                    await _hubContext.Clients.All.SendAsync("UserOffline", userId, userName);
+
+                    Console.WriteLine($"Auto-disconnected user {userName} ({userId}) from SignalR after logout");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error auto-disconnecting user from SignalR: {ex.Message}");
+            }
         }
     }
 }

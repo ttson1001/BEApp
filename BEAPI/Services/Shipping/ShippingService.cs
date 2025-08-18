@@ -1,5 +1,4 @@
-﻿// BEAPI/Services/Shipping/ShippingService.cs
-using BEAPI.Database;
+﻿using BEAPI.Database;
 using BEAPI.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -178,7 +177,6 @@ namespace BEAPI.Services.Shipping
             });
             await _db.SaveChangesAsync(ct);
         }
-
 
         public async Task<string> SyncShipmentStatusAsync(Guid orderId, CancellationToken ct = default)
         {
@@ -366,7 +364,7 @@ namespace BEAPI.Services.Shipping
                 case Entities.Enum.OrderStatus.Completed:
                 case Entities.Enum.OrderStatus.Canceled:
                 case Entities.Enum.OrderStatus.Fail:
-                    next = current; // không advance nữa
+                    next = current;
                     break;
             }
 
