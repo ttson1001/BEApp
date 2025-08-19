@@ -22,12 +22,12 @@ namespace BEAPI.Controllers
         //    return Ok(new { serviceId, serviceTypeId, fee });
         //}
 
-        //[HttpPost("orders/{orderId:guid}/recalc-fee-default")]
-        //public async Task<IActionResult> RecalcFeeDefault(Guid orderId, CancellationToken ct)
-        //{
-        //    var (serviceId, serviceTypeId, fee) = await _ship.RecalcAndSaveFeeDefaultAsync(orderId, ct);
-        //    return Ok(new { serviceId, serviceTypeId, fee, saved = true });
-        //}
+        [HttpPost("{addressId:guid}/[action]")]
+        public async Task<IActionResult> RecalcFeeDefault(Guid addressId, CancellationToken ct)
+        {
+            var (serviceId, serviceTypeId, fee) = await _ship.RecalcAndSaveFeeDefaultAsync(addressId, ct);
+            return Ok(new { serviceId, serviceTypeId, fee, saved = true });
+        }
 
         [HttpPost("{orderId:guid}/[action]")]
         public async Task<IActionResult> CreateOrderInGHN(Guid orderId, CancellationToken ct)

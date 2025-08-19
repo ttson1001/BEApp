@@ -72,19 +72,17 @@ namespace BEAPI.Services.Shipping
             });
         }
 
-        public async Task<(int serviceId, int serviceTypeId, decimal fee)> QuoteFeeDefaultAsync(Guid orderId, CancellationToken ct = default)
+        public async Task<(int serviceId, int serviceTypeId, decimal fee)> QuoteFeeDefaultAsync(Guid adrresId, CancellationToken ct = default)
         {
-            var order = await _db.Set<Order>().AsNoTracking()
-                .FirstOrDefaultAsync(o => o.Id == orderId, ct)
-                ?? throw new Exception("Order not found");
+            var address = await _db.Set<Address>().AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == adrresId, ct)
+                ?? throw new Exception("Address not found");
 
-            EnsureAddress(order);
-
-            var (serviceId, serviceTypeId) = await AutoPickServiceAsync(order.DistrictID, ct);
+            var (serviceId, serviceTypeId) = await AutoPickServiceAsync(address.DistrictID, ct);
 
             var fee = await _ghn.CalcFeeAsync(
-                toDistrictId: order.DistrictID,
-                toWardCode: order.WardCode,
+                toDistrictId: address.DistrictID,
+                toWardCode: address.WardCode,
                 serviceId: serviceId,
                 weight: W_DEFAULT,
                 length: L_DEFAULT,
@@ -96,16 +94,9 @@ namespace BEAPI.Services.Shipping
             return (serviceId, serviceTypeId, fee);
         }
 
-        public async Task<(int serviceId, int serviceTypeId, decimal fee)> RecalcAndSaveFeeDefaultAsync(Guid orderId, CancellationToken ct = default)
+        public async Task<(int serviceId, int serviceTypeId, decimal fee)> RecalcAndSaveFeeDefaultAsync(Guid addressId, CancellationToken ct = default)
         {
-            var (serviceId, serviceTypeId, fee) = await QuoteFeeDefaultAsync(orderId, ct);
-
-            var order = await _db.Set<Order>().FirstOrDefaultAsync(o => o.Id == orderId, ct)
-                ?? throw new Exception("Order not found");
-
-            order.ShippingServiceId = serviceId;
-            order.ShippingFee = fee;
-            await _db.SaveChangesAsync(ct);
+            var (serviceId, serviceTypeId, fee) = await QuoteFeeDefaultAsync(addressId, ct);
 
             return (serviceId, serviceTypeId, fee);
         }

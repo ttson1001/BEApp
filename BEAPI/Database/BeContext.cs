@@ -27,7 +27,7 @@ namespace BEAPI.Database
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public BeContext(DbContextOptions<BeContext> options) : base(options) { }
-
+        public DbSet<UserConnection> UserConnections { get; set; }
         public DbSet<OrderShipmentEvent> OrderShipmentEvents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
