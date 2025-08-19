@@ -4,6 +4,7 @@
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
+        public string FullName { get; set; }
         public string ChannelName { get; set; } = null!;
         public string Type { get; set; } = null!;
         public string Token { get; set; } = null!;

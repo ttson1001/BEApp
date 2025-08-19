@@ -38,12 +38,13 @@ namespace BEAPI.Services
 
         public async Task<UserConnectionDto?> GetByConsultantAsync(Guid consultantId)
         {
-            return await _repo.Get()
+            return await _repo.Get().Include(x => x.User)
                 .Where(x => x.Consultant == consultantId)
                 .Select(x => new UserConnectionDto
                 {
                     Id = x.Id,
                     UserId = x.UserId,
+                    FullName = x.User.FullName,
                     ChannelName = x.ChannelName,
                     Type = x.Type,
                     Token = x.Token,
