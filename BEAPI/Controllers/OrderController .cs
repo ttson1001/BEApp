@@ -160,9 +160,15 @@ namespace BEAPI.Controllers
         [HttpGet("[action]/{id}")]
         public async Task<IActionResult> GetById(string id)
         {
-            var order = await _service.GetOrderByIdAsync(id);
-            if (order == null) return NotFound();
-            return Ok(order);
+            try
+            {
+                var order = await _service.GetOrderByIdAsync(id);
+                return Ok(new { message = "Get order successfully", data = order });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
     }

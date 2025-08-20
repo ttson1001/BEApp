@@ -15,6 +15,7 @@
 
         public string? CustomerName { get; set; }
         public string? ElderName { get; set; }
+        public DateTimeOffset? CreationDate { get; set; }
 
         public List<OrderDetailDto> OrderDetails { get; set; } = new();
     }

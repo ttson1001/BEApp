@@ -276,6 +276,7 @@ namespace BEAPI.Services
                 DistrictName = order.DistrictName ?? string.Empty,
                 ProvinceName = order.ProvinceName ?? string.Empty,
                 CustomerName = order.Customer?.FullName ?? string.Empty,
+                CreationDate = order.CreationDate,
                 ElderName = order.Elder?.FullName ?? string.Empty,
                 OrderDetails = order.OrderDetails.Select(od => new OrderDetailDto
                 {
