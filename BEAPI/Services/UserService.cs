@@ -64,6 +64,7 @@ namespace BEAPI.Services
 
             var user = _mapper.Map<User>(elderRegisterDto);
             user.Age = age;
+            user.IsVerified = true;
             user.GuardianId = userId;
 
             if (elderRegisterDto.Addresses.Count != 0)

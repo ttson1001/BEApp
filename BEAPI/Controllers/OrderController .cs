@@ -1,7 +1,9 @@
-﻿using BEAPI.Dtos.Order;
-using BEAPI.Services.IServices;
+﻿using BEAPI.Dtos.Common;
+using BEAPI.Dtos.Order;
 using BEAPI.Helper;
 using BEAPI.PaymentService.VnPay;
+using BEAPI.Services;
+using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -171,5 +173,51 @@ namespace BEAPI.Controllers
             }
         }
 
+        [HttpGet("[action]/{userId:guid}")]
+        public async Task<IActionResult> GetUserStatistic(Guid userId)
+        {
+            try
+            {
+                var result = await _service.UserStatistic(userId);
+                return Ok(new ResponseDto
+                {
+                    Message = "Get order statistic successfully",
+                    Data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Message = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetElderBudgetStatistic(
+       [FromQuery] Guid customerId,
+       [FromQuery] DateTime fromDate,
+       [FromQuery] DateTime toDate,
+       CancellationToken ct)
+        {
+            try
+            {
+                var result = await _service.ElderBudgetStatistic(customerId, fromDate, toDate);
+
+                return Ok(new ResponseDto
+                {
+                    Message = "Get elder budget statistic successfully",
+                    Data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Message = ex.Message
+                });
+            }
+        }
     }
 }

@@ -94,7 +94,6 @@ namespace BEAPI.Services
             };
         }
 
-
         public async Task CreateAsync(ReportCreateDto dto)
         {
             var report = _mapper.Map<Report>(dto);

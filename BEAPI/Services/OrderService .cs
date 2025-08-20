@@ -347,5 +347,44 @@ namespace BEAPI.Services
             return result;
         }
 
+        public async Task<OrderStatisticDto> UserStatistic(Guid UserId)
+        {
+            var orders = await _orderRepo.Get()
+                .Where(x => x.CustomerId == UserId)
+                .ToListAsync();
+
+            var result = new OrderStatisticDto
+            {
+                TotalCount = orders.Count,
+                TotalOrderToPending = orders.Count(x =>
+                                    x.OrderStatus == OrderStatus.Paid
+                                    || x.OrderStatus == OrderStatus.PendingChecked
+                                    || x.OrderStatus == OrderStatus.PendingConfirm
+                                    || x.OrderStatus == OrderStatus.PendingPickup
+                                    || x.OrderStatus == OrderStatus.PendingDelivery
+                                    || x.OrderStatus == OrderStatus.Shipping),
+                TotalOrderComplete = orders.Count(x => x.OrderStatus == OrderStatus.Delivered)
+            };
+            return result;
+        }
+
+        public async Task<List<ElderBudgetStatisticDto>> ElderBudgetStatistic(Guid customerId, DateTime fromDate, DateTime toDate)
+        {
+            var query = await _orderRepo.Get()
+                 .Where(o => o.CustomerId == customerId
+                          && o.CreationDate >= fromDate
+                          && o.CreationDate <= toDate)
+                 .GroupBy(o => new { o.ElderId, o.Elder.FullName })
+                 .Select(g => new ElderBudgetStatisticDto
+                 {
+                     ElderId = g.Key.ElderId,
+                     ElderName = g.Key.FullName,
+                     TotalSpent = g.Sum(x => x.TotalPrice),
+                     OrderCount = g.Count()
+                 })
+                 .ToListAsync();
+
+            return query;
+        }
     }
 }

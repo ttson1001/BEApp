@@ -25,8 +25,19 @@ namespace BEAPI.Controllers
         [HttpPost("{addressId:guid}/[action]")]
         public async Task<IActionResult> RecalcFeeDefault(Guid addressId, CancellationToken ct)
         {
-            var (serviceId, serviceTypeId, fee) = await _ship.RecalcAndSaveFeeDefaultAsync(addressId, ct);
-            return Ok(new { serviceId, serviceTypeId, fee, saved = true });
+            try
+            {
+                var (serviceId, serviceTypeId, fee) = await _ship.RecalcAndSaveFeeDefaultAsync(addressId, ct);
+                return Ok(new ResponseDto
+                {
+                    Message = "Recalculate fee successfully",
+                    Data = new { serviceId, serviceTypeId, fee, saved = true }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
         }
 
         [HttpPost("{orderId:guid}/[action]")]
