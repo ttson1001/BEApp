@@ -51,10 +51,10 @@ namespace BEAPI.Services
                 .ToListAsync();
             return _mapper.Map<List<ReportDto>>(data);
         }
-       
+
         public async Task<PagedResult<ReportDto>> SearchAsync(ReportSearchDto dto)
         {
-            var query = _repo.Get().AsQueryable();
+            var query = _repo.Get().Include(x => x.Consultant).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(dto.Keyword))
             {
@@ -64,7 +64,11 @@ namespace BEAPI.Services
                     r.Description.ToLower().Contains(keyword));
             }
 
-            // ✅ Apply sorting
+            if (dto.ConsultantId.HasValue)
+            {
+                query = query.Where(r => r.ConsultantId == dto.ConsultantId);
+            }
+
             query = dto.SortBy.ToLower() switch
             {
                 "title" => dto.SortAscending ? query.OrderBy(r => r.Title) : query.OrderByDescending(r => r.Title),
@@ -89,6 +93,7 @@ namespace BEAPI.Services
                 Items = _mapper.Map<List<ReportDto>>(items)
             };
         }
+
 
         public async Task CreateAsync(ReportCreateDto dto)
         {
