@@ -145,6 +145,22 @@ namespace BEAPI.Controllers
             }
         }
 
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetOrdersByElder()
+        {
+            try
+            {
+                var userId = User.GetUserId();
+                var orders = await _service.GetOrdersByElderIdAsync(userId);
+                return Ok(new { message = "Get order successfully", data = orders });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpPost("[action]")]
         public async Task<IActionResult> SearchOrders([FromBody] OrderFilterDto request)
         {

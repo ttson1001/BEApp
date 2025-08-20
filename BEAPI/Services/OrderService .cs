@@ -241,6 +241,19 @@ namespace BEAPI.Services
 
             return _mapper.Map<List<OrderDto>>(orders);
         }
+
+        public async Task<List<OrderDto>> GetOrdersByElderIdAsync(string userId)
+        {
+            var elderId = GuidHelper.ParseOrThrow(userId, "ElderId");
+
+            var orders = await _orderRepo.Get()
+                .Where(o => o.ElderId == elderId)
+                .Include(o => o.OrderDetails)
+                .ToListAsync();
+
+            return _mapper.Map<List<OrderDto>>(orders);
+        }
+
         public async Task<OrderDto?> GetOrderByIdAsync(string orderId)
         {
             var id = GuidHelper.ParseOrThrow(orderId, nameof(orderId));
