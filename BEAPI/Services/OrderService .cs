@@ -387,12 +387,13 @@ namespace BEAPI.Services
                  .Where(o => o.CustomerId == customerId
                           && o.CreationDate >= fromDate
                           && o.CreationDate <= toDate)
-                 .GroupBy(o => new { o.ElderId, o.Elder.FullName })
+                 .GroupBy(o => new { o.ElderId, o.Elder.FullName, o.Elder.Spendlimit })
                  .Select(g => new ElderBudgetStatisticDto
                  {
                      ElderId = g.Key.ElderId,
                      ElderName = g.Key.FullName,
                      TotalSpent = g.Sum(x => x.TotalPrice),
+                     LimitSpent = g.Key.Spendlimit,
                      OrderCount = g.Count()
                  })
                  .ToListAsync();

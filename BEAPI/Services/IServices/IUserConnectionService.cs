@@ -8,5 +8,6 @@ namespace BEAPI.Services
         Task ConnectAsync(Guid userId, string channelName, string type, string token, Guid? consultant = null);
         Task DisconnectAsync(Guid consultantId);
         Task<UserConnectionDto?> GetByConsultantAsync(Guid consultantId);
+        Task Decline(Guid consultantId);
     }
 }

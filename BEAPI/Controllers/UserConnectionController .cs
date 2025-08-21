@@ -1,5 +1,4 @@
 ﻿using BEAPI.Dtos.Common;
-using BEAPI.Entities;
 using BEAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,23 +18,65 @@ namespace BEAPI.Controllers
         [HttpPost("connect")]
         public async Task<IActionResult> Connect([FromBody] ConnectDto dto)
         {
-            await _service.ConnectAsync(dto.UserId, dto.ChannelName, dto.Type, dto.Token, dto.Consultant);
-            return Ok(new ResponseDto { Message = "Connected", Data = null });
+            try
+            {
+                await _service.ConnectAsync(dto.UserId, dto.ChannelName, dto.Type, dto.Token, dto.Consultant);
+                return Ok(new ResponseDto { Message = "Connected", Data = null });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
         }
 
         [HttpPost("disconnect")]
         public async Task<IActionResult> Disconnect([FromQuery] Guid consultantId)
         {
-            await _service.DisconnectAsync(consultantId);
-            return Ok(new ResponseDto { Message = "Disconnected" });
+            try
+            {
+                await _service.DisconnectAsync(consultantId);
+                return Ok(new ResponseDto { Message = "Disconnected" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
         }
 
         [HttpGet("consultant/{consultantId}")]
         public async Task<IActionResult> GetByConsultant(Guid consultantId)
         {
-            var connection = await _service.GetByConsultantAsync(consultantId);
-            if (connection == null) return NotFound(new ResponseDto { Message = "No connection found" });
-            return Ok(new ResponseDto { Data = connection });
+            try
+            {
+                var connection = await _service.GetByConsultantAsync(consultantId);
+                if (connection == null)
+                    return NotFound(new ResponseDto { Message = "No connection found" });
+
+                return Ok(new ResponseDto { Data = connection });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
+        [HttpPost("{consultantId}/decline")]
+        public async Task<IActionResult> Decline(Guid consultantId)
+        {
+            try
+            {
+                await _service.Decline(consultantId);
+
+                return Ok(new ResponseDto
+                {
+                    Message = "Consultant declined successfully",
+                    Data = new { DeclinedConsultantId = consultantId }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
         }
     }
 }

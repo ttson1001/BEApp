@@ -20,5 +20,7 @@ namespace BEAPI.Entities
         [Required]
         public string Token { get; set; } = null!; // connectionId
 
+        public string? SkippedConsultants { get; set; }
+
     }
 }
