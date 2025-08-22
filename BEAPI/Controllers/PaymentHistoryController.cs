@@ -1,4 +1,4 @@
-using BEAPI.Dtos.Common;
+﻿using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Payment;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +27,29 @@ namespace BEAPI.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
+        [HttpGet("[action]/{userId}")]
+        public async Task<IActionResult> GetByUserId(Guid userId, CancellationToken ct)
+        {
+            try
+            {
+                var payments = await _service.GetByUserIdAsync(userId, ct);
+
+                return Ok(new ResponseDto
+                {
+                    Data = payments,
+                    Message = "payment history successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
             }
         }
     }

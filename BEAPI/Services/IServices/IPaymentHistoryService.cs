@@ -6,6 +6,7 @@ namespace BEAPI.Services.IServices
     public interface IPaymentHistoryService
     {
         Task<PagedResult<PaymentHistoryDto>> SearchAsync(PaymentHistorySearchDto request);
+        Task<List<PaymentHistoryDto>> GetByUserIdAsync(Guid userId, CancellationToken ct = default);
     }
 }
 

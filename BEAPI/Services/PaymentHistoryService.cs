@@ -70,6 +70,28 @@ namespace BEAPI.Services
                 Items = items
             };
         }
+
+        public async Task<List<PaymentHistoryDto>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+        {
+            return await _repo.Get()
+                .Where(p => p.UserId == userId)
+                .Include(p => p.User)
+                .Include(p => p.Order)
+                .OrderByDescending(p => p.CreationDate)
+                .Select(p => new PaymentHistoryDto
+                {
+                    Id = p.Id.ToString(),
+                    Amount = p.Amount,
+                    UserId = p.UserId.ToString(),
+                    UserName = p.User.FullName,
+                    Avatar = p.User.Avatar,
+                    PaymentMenthod = p.PaymentMenthod,
+                    paymentStatus = p.paymentStatus,
+                    CreationDate = p.CreationDate,
+                    OrderId = p.OrderId.HasValue ? p.OrderId.ToString() : null
+                })
+                .ToListAsync(ct);
+        }
     }
 }
 
