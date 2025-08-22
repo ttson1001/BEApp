@@ -235,5 +235,23 @@ namespace BEAPI.Controllers
                 });
             }
         }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> CancelOrder([FromBody] CancelOrderDto dto)
+        {
+            try
+            {
+                
+                var result = await _service.CancelOrderAsync(dto);
+                return Ok(new { 
+                    message = "Order cancelled successfully", 
+                    data = result 
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

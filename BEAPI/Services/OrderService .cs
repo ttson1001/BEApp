@@ -400,5 +400,69 @@ namespace BEAPI.Services
 
             return query;
         }
+
+        public async Task<CancelOrderResponseDto> CancelOrderAsync(CancelOrderDto dto)
+        {
+            if (!Guid.TryParse(dto.OrderId, out var orderId))
+            {
+                throw new Exception("Invalid order ID format");
+            }
+
+            var order = await _orderRepo.Get()
+                .Include(o => o.OrderDetails)
+                .Include(o => o.Customer)
+                .Include(o => o.Elder)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+            {
+                throw new Exception("Order not found");
+            }
+
+            var cancellableStatuses = new[] 
+            { 
+                OrderStatus.Created, 
+                OrderStatus.Paid
+            };
+
+            if (!cancellableStatuses.Contains(order.OrderStatus))
+            {
+                throw new Exception($"Order cannot be cancelled in current status: {order.OrderStatus}. Only orders in 'Created' or 'Paid' status can be cancelled.");
+            }
+
+            var previousStatus = order.OrderStatus;
+            var isRefunded = false;
+
+            order.OrderStatus = OrderStatus.Canceled;
+            order.Note = string.IsNullOrEmpty(order.Note) 
+                ? $"Cancelled: {dto.CancelReason}" 
+                : $"{order.Note} | Cancelled: {dto.CancelReason}";
+
+            if (previousStatus == OrderStatus.Paid)
+            {
+                var wallet = await _walletRepo.Get()
+                    .FirstOrDefaultAsync(w => w.UserId == order.CustomerId);
+
+                if (wallet != null)
+                {
+                    wallet.Amount += order.TotalPrice;
+                     _walletRepo.Update(wallet);
+                    isRefunded = true;
+                }
+            }
+
+            _orderRepo.Update(order);
+            await _orderRepo.SaveChangesAsync();
+            return new CancelOrderResponseDto
+            {
+                OrderId = dto.OrderId,
+                CancelReason = dto.CancelReason,
+                PreviousStatus = previousStatus,
+                CurrentStatus = OrderStatus.Canceled,
+                RefundAmount = isRefunded ? order.TotalPrice : 0,
+                IsRefunded = isRefunded,
+                CancelledAt = DateTime.UtcNow
+            };
+        }
     }
 }

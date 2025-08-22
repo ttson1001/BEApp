@@ -13,5 +13,6 @@ namespace BEAPI.Services.IServices
         Task<OrderDto?> GetOrderByIdAsync(string orderId);
         Task<OrderStatisticDto> UserStatistic(Guid UserId);
         Task<List<ElderBudgetStatisticDto>> ElderBudgetStatistic(Guid customerId, DateTime fromDate, DateTime toDate);
+        Task<CancelOrderResponseDto> CancelOrderAsync(CancelOrderDto dto);
     }
 }
