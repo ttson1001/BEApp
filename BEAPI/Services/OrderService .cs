@@ -117,7 +117,7 @@ namespace BEAPI.Services
                     OrderId = order.Id,
                     UserId = cart.CustomerId,
                     PaymentMenthod = paymentMethod,
-                    paymentStatus = PaymentStatus.Paid,
+                    PaymentStatus = PaymentStatus.Paid,
                 };
                 await _paymentHistoryRepo.AddAsync(payment);
 
@@ -458,7 +458,7 @@ namespace BEAPI.Services
                 UserId = order.CustomerId,
                 Amount = order.TotalPrice,
                 PaymentMenthod = "WALLET",
-                paymentStatus = PaymentStatus.Refund
+                PaymentStatus = PaymentStatus.Refund
             };
 
             await _paymentHistoryRepo.AddAsync(payment);

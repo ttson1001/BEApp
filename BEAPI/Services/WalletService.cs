@@ -44,7 +44,7 @@ namespace BEAPI.Services
                 UserId = userId,
                 Amount = amount,
                 PaymentMenthod = "WALLET",
-                paymentStatus = PaymentStatus.TopUp
+                PaymentStatus = PaymentStatus.TopUp
             };
 
             await _paymentRepo.AddAsync(payment, ct);
