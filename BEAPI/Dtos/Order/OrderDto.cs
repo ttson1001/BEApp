@@ -11,11 +11,13 @@
         public string? StreetAddress { get; set; }
         public string? WardName { get; set; }
         public string? DistrictName { get; set; }
+        public string? ShippingCode { get; set; }
         public string? ProvinceName { get; set; }
-
+        public decimal? ShippingFee { get; set; }
         public string? CustomerName { get; set; }
         public string? ElderName { get; set; }
         public DateTimeOffset? CreationDate { get; set; }
+        public DateTimeOffset? ExpectedDeliveryTime { get; set; }
 
         public List<OrderDetailDto> OrderDetails { get; set; } = new();
     }

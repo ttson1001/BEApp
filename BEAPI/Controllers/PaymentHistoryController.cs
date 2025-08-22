@@ -30,7 +30,7 @@ namespace BEAPI.Controllers
             }
         }
 
-        [HttpGet("[action]/{userId}")]
+        [HttpPost("[action]")]
         public async Task<IActionResult> GetByUserId(DateRangeDto dateRangeDto, CancellationToken ct)
         {
             try

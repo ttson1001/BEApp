@@ -122,11 +122,11 @@ namespace BEAPI.Controllers
             try
             {
                 await _service.CreateOrderByWalletAsync(dto);
-                return Ok(new { message = "Checkout by wallet successful" });
+                return Ok(new { message = "Checkout by wallet successful", data = $"silvercart://payment/callback?status=success" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new { message = ex.Message , data= $"silvercart://payment/callback?status=fail" });
             }
         }
 
