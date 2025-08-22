@@ -31,11 +31,11 @@ namespace BEAPI.Controllers
         }
 
         [HttpGet("[action]/{userId}")]
-        public async Task<IActionResult> GetByUserId(Guid userId, CancellationToken ct)
+        public async Task<IActionResult> GetByUserId(DateRangeDto dateRangeDto, CancellationToken ct)
         {
             try
             {
-                var payments = await _service.GetByUserIdAsync(userId, ct);
+                var payments = await _service.GetPaymentHistoriesAsync(dateRangeDto, ct);
 
                 return Ok(new ResponseDto
                 {

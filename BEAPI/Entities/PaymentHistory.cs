@@ -10,7 +10,7 @@ namespace BEAPI.Entities
         public Guid UserId { get; set; }
         public User User { get; set; }
         public string? PaymentMenthod { get; set; }
-        public PaymentStatus paymentStatus { get; set; }
+        public PaymentStatus PaymentStatus { get; set; }
         public Guid? OrderId { get; set; }
         public Order? Order { get; set; }
     }

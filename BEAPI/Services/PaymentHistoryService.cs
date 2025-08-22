@@ -1,5 +1,4 @@
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Payment;
 using BEAPI.Entities;
@@ -56,7 +55,7 @@ namespace BEAPI.Services
                     UserName = p.User != null ? p.User.FullName : null,
                     Avatar = p.User != null ? p.User.Avatar : null,
                     PaymentMenthod = p.PaymentMenthod,
-                    paymentStatus = p.paymentStatus,
+                    PaymentStatus = p.PaymentStatus,
                     CreationDate = p.CreationDate,
                     OrderId = p.OrderId.HasValue ? p.OrderId.Value.ToString() : null
                 })
@@ -71,12 +70,20 @@ namespace BEAPI.Services
             };
         }
 
-        public async Task<List<PaymentHistoryDto>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+        public async Task<List<PaymentHistoryDto>> GetPaymentHistoriesAsync(DateRangeDto dto, CancellationToken ct)
         {
-            return await _repo.Get()
-                .Where(p => p.UserId == userId)
+            IQueryable<PaymentHistory> query = _repo.Get()
+                .Where(p => p.UserId == dto.UserId)
                 .Include(p => p.User)
-                .Include(p => p.Order)
+                .Include(p => p.Order);
+
+            if (dto.FromDate.HasValue)
+                query = query.Where(p => p.CreationDate >= dto.FromDate.Value);
+
+            if (dto.ToDate.HasValue)
+                query = query.Where(p => p.CreationDate <= dto.ToDate.Value);
+
+            return await query
                 .OrderByDescending(p => p.CreationDate)
                 .Select(p => new PaymentHistoryDto
                 {
@@ -86,7 +93,7 @@ namespace BEAPI.Services
                     UserName = p.User.FullName,
                     Avatar = p.User.Avatar,
                     PaymentMenthod = p.PaymentMenthod,
-                    paymentStatus = p.paymentStatus,
+                    PaymentStatus = p.PaymentStatus,
                     CreationDate = p.CreationDate,
                     OrderId = p.OrderId.HasValue ? p.OrderId.ToString() : null
                 })
