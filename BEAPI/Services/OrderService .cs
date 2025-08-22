@@ -117,7 +117,7 @@ namespace BEAPI.Services
                     OrderId = order.Id,
                     UserId = cart.CustomerId,
                     PaymentMenthod = paymentMethod,
-                    paymentStatus = PaymentStatus.Success
+                    paymentStatus = PaymentStatus.Paid,
                 };
                 await _paymentHistoryRepo.AddAsync(payment);
 
@@ -452,6 +452,16 @@ namespace BEAPI.Services
             }
 
             _orderRepo.Update(order);
+
+            var payment = new PaymentHistory
+            {
+                UserId = order.CustomerId,
+                Amount = order.TotalPrice,
+                PaymentMenthod = "WALLET",
+                paymentStatus = PaymentStatus.Refund
+            };
+
+            await _paymentHistoryRepo.AddAsync(payment);
             await _orderRepo.SaveChangesAsync();
             return new CancelOrderResponseDto
             {

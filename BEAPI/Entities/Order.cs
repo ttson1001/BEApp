@@ -1,6 +1,5 @@
 ﻿using BEAPI.Entities.Enum;
 using System.ComponentModel.DataAnnotations.Schema;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace BEAPI.Entities
 {
