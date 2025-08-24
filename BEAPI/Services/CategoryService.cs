@@ -25,18 +25,74 @@ namespace BEAPI.Services
         public async Task CreateListCategory(List<CreateCategoryValueDto> categoryValueDtos)
         {
             var root = await _repository.Get()
-              .Include(x => x.Values)
-              .FirstOrDefaultAsync(x => x.Note == "CATEGORY" && x.Type == Entities.Enum.MyValueType.Category)
-              ?? throw new Exception("ListOfValue not found");
+                .Include(x => x.Values)
+                .FirstOrDefaultAsync(x => x.Note == "CATEGORY" && x.Type == Entities.Enum.MyValueType.Category)
+                ?? throw new Exception("ListOfValue not found");
 
-            var values = categoryValueDtos.Select(val => new Value
+            var values = new List<Value>();
+
+            foreach (var val in categoryValueDtos)
             {
-                Code = val.Code,
-                Label = val.Label,
-                Description = val.Description,
-                Type = Entities.Enum.MyValueType.Category,
-                ListOfValueId = root.Id
-            }).ToList();
+                var childLov = new ListOfValue
+                {
+                    Id = Guid.NewGuid(),
+                    Label = val.Label,
+                    Note = val.Code,
+                    Type = Entities.Enum.MyValueType.Category,
+                    Values = new List<Value>()
+                };
+
+                var value = new Value
+                {
+                    Code = val.Code,
+                    Label = val.Label,
+                    Description = val.Description,
+                    Type = Entities.Enum.MyValueType.Category,
+                    ListOfValueId = root.Id,
+                    ChildListOfValueId = childLov.Id,
+                    ChildListOfValue = childLov
+                };
+
+                values.Add(value);
+            }
+
+            await _valueRepo.AddRangeAsync(values);
+            await _valueRepo.SaveChangesAsync();
+        }
+
+        public async Task CreateListSubCategory(CreateSubCategoryValueDto categorySubValueDtos)
+        {
+            var root = await _repository.Get()
+                .Include(x => x.Values)
+                .FirstOrDefaultAsync(x => x.Id == categorySubValueDtos.Id && x.Type == Entities.Enum.MyValueType.Category)
+                ?? throw new Exception("ListOfValue not found");
+
+            var values = new List<Value>();
+
+            foreach (var val in categorySubValueDtos.CreateCategoryValueDtos)
+            {
+                var childLov = new ListOfValue
+                {
+                    Id = Guid.NewGuid(),
+                    Label = val.Label,
+                    Note = val.Code,
+                    Type = Entities.Enum.MyValueType.Category,
+                    Values = new List<Value>()
+                };
+
+                var value = new Value
+                {
+                    Code = val.Code,
+                    Label = val.Label,
+                    Description = val.Description,
+                    Type = Entities.Enum.MyValueType.Category,
+                    ListOfValueId = root.Id,
+                    ChildListOfValueId = childLov.Id,
+                    ChildListOfValue = childLov
+                };
+
+                values.Add(value);
+            }
 
             await _valueRepo.AddRangeAsync(values);
             await _valueRepo.SaveChangesAsync();
@@ -185,6 +241,16 @@ namespace BEAPI.Services
                 {
                     var currentPath = new List<string>(path) { node.ValueId };
 
+                    result.Add(new CategoryValueLeafWithPathDto
+                    {
+                        ValueId = node.ValueId,
+                        Code = node.Code,
+                        Label = node.Label,
+                        Description = node.Description,
+                        Type = node.Type,
+                        Path = currentPath
+                    });
+
                     if (node.Children != null && node.Children.Any())
                     {
                         foreach (var child in node.Children)
@@ -192,24 +258,13 @@ namespace BEAPI.Services
                             Traverse(child.Values, currentPath);
                         }
                     }
-                    else
-                    {
-                        result.Add(new CategoryValueLeafWithPathDto
-                        {
-                            ValueId = node.ValueId,
-                            Code = node.Code,
-                            Label = node.Label,
-                            Description = node.Description,
-                            Type = node.Type,
-                            Path = currentPath
-                        });
-                    }
                 }
             }
 
             Traverse(tree.Values, new List<string>());
             return result;
         }
+
 
         public async Task<List<ListOfValueDto>> GetListCategoryNoValue()
         {
@@ -231,15 +286,15 @@ namespace BEAPI.Services
             {
                 var currentListId = toVisit.Dequeue();
 
-                // ✅ Nếu đã duyệt qua rồi thì bỏ qua (chặn vòng lặp)
+                // Nếu đã duyệt qua rồi thì bỏ qua (chặn vòng lặp)
                 if (!visited.Add(currentListId))
                     continue;
 
-                // ✅ Nếu vòng tròn xảy ra
+                // Nếu vòng tròn xảy ra
                 if (currentListId == sourceListOfValueId)
                     return true;
 
-                // ✅ Truy vấn tất cả các Value trong List hiện tại mà có liên kết tới list khác
+                // Truy vấn tất cả các Value trong List hiện tại mà có liên kết tới list khác
                 var values = await _valueRepo.Get()
                     .Where(v => v.ListOfValueId == currentListId && v.ChildListOfValueId != null)
                     .ToListAsync();

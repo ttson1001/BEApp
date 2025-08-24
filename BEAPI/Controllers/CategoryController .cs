@@ -167,6 +167,27 @@ namespace BEAPI.Controllers
                 });
             }
         }
+        
+        [HttpPost("[action]")]
+        public async Task<IActionResult> CreateListSubCategory([FromBody] CreateSubCategoryValueDto dtos)
+        {
+            try
+            {
+                await _categoryService.CreateListSubCategory(dtos);
+                return Ok(new ResponseDto
+                {
+                    Message = "Category created successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
+            }
+        }
 
         [HttpGet("[action]")]
         public async Task<IActionResult> GetTree()
