@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  beapi:
+    build:
+      context: .
+      dockerfile: BEAPI/Dockerfile
+    container_name: rideon-be
+    restart: always
+    expose:
+      - "80"
+
+  nginx:
+    image: nginx:latest
+    container_name: rideon-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/ssl/silvercart.site.crt:/etc/ssl/silvercart.site.crt:ro
+      - /etc/ssl/silvercart.site.key:/etc/ssl/silvercart.site.key:ro
+    depends_on:
+      - beapi
