@@ -4,7 +4,7 @@ services:
   beapi:
     build:
       context: .
-      dockerfile: BEAPI/Dockerfile
+      dockerfile: Dockerfile
     container_name: rideon-be
     restart: always
     expose:
