@@ -58,5 +58,10 @@ namespace BEAPI.Controllers
             </html>", "text/html");
         }
 
+        [HttpGet("[action]")]
+        public IActionResult Test2([FromQuery] string url)
+        {
+            return Ok(url);
+        }
     }
 }
