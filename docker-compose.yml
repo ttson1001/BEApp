@@ -1,25 +1,33 @@
-version: "3.9"
-
 services:
-  beapi:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: rideon-be
-    restart: always
-    expose:
-      - "80"
-
   nginx:
     image: nginx:latest
     container_name: rideon-nginx
-    restart: always
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - /etc/ssl/silvercart.site.crt:/etc/ssl/silvercart.site.crt:ro
-      - /etc/ssl/silvercart.site.key:/etc/ssl/silvercart.site.key:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
     depends_on:
-      - beapi
+      - beapp
+  
+  beapp:
+    image: beapp-beapi
+    container_name: rideon-be
+    expose:
+      - "9000"
+
+  certbot:
+    image: certbot/certbot
+    container_name: rideon-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: >
+      sh -c "certbot certonly --webroot
+      --webroot-path=/var/www/certbot
+      --email somith727@gmail.com
+      --agree-tos
+      --no-eff-email
+      -d silvercart.site -d www.silvercart.site"
