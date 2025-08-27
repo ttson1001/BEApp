@@ -38,6 +38,50 @@ namespace BEAPI.Controllers
             }
         }
 
+        [HttpPut("[action]")]
+        public async Task<IActionResult> DeactivateOrActiveBrand([FromQuery] Guid valueId)
+        {
+            try
+            {
+                await _brandService.DeactivateOrActiveBrandAsync(valueId);
+                return Ok(new ResponseDto
+                {
+                    Message = "Brand Deactivate Or Active successfully",
+                    Data = null,
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
+            }
+        }
+
+        [HttpPut("[action]")]
+        public async Task<IActionResult> EditBrand([FromQuery] UpdateCategoryValueDto updateCategoryValueDto)
+        {
+            try
+            {
+                await _brandService.EditBrandAsync(updateCategoryValueDto);
+                return Ok(new ResponseDto
+                {
+                    Message = "Brand Edit successfully",
+                    Data = null,
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
+            }
+        }
+
         [HttpPost("[action]")]
         public async Task<IActionResult> CreateValueOfBrandRoot([FromBody] List<CreateCategoryValueDto> dtos)
         {

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BEAPI.Dtos.Category;
 using BEAPI.Entities;
+using BEAPI.Entities.Enum;
 using BEAPI.Helper;
 using BEAPI.Repositories;
 using BEAPI.Services.IServices;
@@ -44,5 +45,38 @@ namespace BEAPI.Services
             return _mapper.Map<List<CategoryValueDto>>(category.Values);
         }
 
+        public async Task DeactivateOrActiveBrandAsync(Guid valueId)
+        {
+            var value = await _valueRepo.Get()
+                .FirstOrDefaultAsync(v => v.Id == valueId && v.Type == MyValueType.Brand);
+
+            if (value == null)
+            {
+                throw new Exception("Brand not found");
+            }
+
+            value.IsDeleted = !value.IsDeleted;
+
+            _valueRepo.Update(value);
+            await _valueRepo.SaveChangesAsync();
+        }
+
+        public async Task EditBrandAsync(UpdateCategoryValueDto dto)
+        {
+            var value = await _valueRepo.Get()
+                .FirstOrDefaultAsync(v => v.Id == dto.Id && v.Type == MyValueType.Brand);
+
+            if (value == null)
+            {
+                throw new Exception("Brand not found");
+            }
+
+            value.Code = dto.Code;
+            value.Label = dto.Label;
+            value.Description = dto.Description;
+
+            _valueRepo.Update(value);
+            await _valueRepo.SaveChangesAsync();
+        }
     }
 }

@@ -6,5 +6,7 @@ namespace BEAPI.Services.IServices
     {
         Task CreateListBrand(List<CreateCategoryValueDto> categoryValueDtos);
         Task<List<CategoryValueDto>> GetListValueBrand();
+        Task DeactivateOrActiveBrandAsync(Guid valueId);
+        Task EditBrandAsync(UpdateCategoryValueDto dto);
     }
 }
