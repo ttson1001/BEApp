@@ -93,7 +93,5 @@ namespace BEAPI.Services
             _valueRepo.Update(value);
             await _valueRepo.SaveChangesAsync();
         }
-
-        Task EditProductPropertyAsync(UpdateCategoryValueDto dto)
     }
 }

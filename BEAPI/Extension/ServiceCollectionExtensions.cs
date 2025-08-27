@@ -39,6 +39,7 @@ namespace BEAPI.Extension
             services.AddScoped<ShippingService>();
             services.AddScoped<VNPayService>();
             services.AddScoped<IUserConnectionService, UserConnectionService>();
+            services.AddScoped<IWithdrawRequestService, WithdrawRequestService>();
         }
     }
 }
