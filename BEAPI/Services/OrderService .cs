@@ -283,7 +283,7 @@ namespace BEAPI.Services
                 TotalPrice = order.TotalPrice,
                 Discount = order.Discount,
                 OrderStatus = order.OrderStatus.ToString(),
-                PhoneNumber = order.Customer?.PhoneNumber ?? string.Empty,
+                PhoneNumber = order.PhoneNumber ?? string.Empty,
                 StreetAddress = order.StreetAddress ?? string.Empty,
                 WardName = order.WardName ?? string.Empty,
                 DistrictName = order.DistrictName ?? string.Empty,
@@ -320,6 +320,7 @@ namespace BEAPI.Services
             var query = _orderRepo.Get()
                 .Include(o => o.OrderDetails)
                 .Include(o => o.Elder)
+                .Include(o => o.Customer)
                 .AsQueryable();
 
             if (request.OrderStatus.HasValue)

@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using BEAPI.Dtos.Category;
 using BEAPI.Dtos.ListOfValue;
 using BEAPI.Dtos.Value;
 using BEAPI.Entities;
+using BEAPI.Entities.Enum;
 using BEAPI.Repositories;
 using BEAPI.Services.IServices;
 using Microsoft.EntityFrameworkCore;
@@ -57,5 +59,41 @@ namespace BEAPI.Services
 
             return _mapper.Map<List<ValueDto>>(list);
         }
+
+        public async Task DeactivateOrActiveProductPropertyAsync(Guid valueId)
+        {
+            var value = await _valueRepo.Get()
+                .FirstOrDefaultAsync(v => v.Id == valueId && v.Type == MyValueType.ProductProperty);
+
+            if (value == null)
+            {
+                throw new Exception("ProductProperty not found");
+            }
+
+            value.IsDeleted = !value.IsDeleted;
+
+            _valueRepo.Update(value);
+            await _valueRepo.SaveChangesAsync();
+        }
+
+        public async Task EditProductPropertyAsync(UpdateCategoryValueDto dto)
+        {
+            var value = await _valueRepo.Get()
+                .FirstOrDefaultAsync(v => v.Id == dto.Id && v.Type == MyValueType.ProductProperty);
+
+            if (value == null)
+            {
+                throw new Exception("ProductProperty not found");
+            }
+
+            value.Code = dto.Code;
+            value.Label = dto.Label;
+            value.Description = dto.Description;
+
+            _valueRepo.Update(value);
+            await _valueRepo.SaveChangesAsync();
+        }
+
+        Task EditProductPropertyAsync(UpdateCategoryValueDto dto)
     }
 }

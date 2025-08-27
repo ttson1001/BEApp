@@ -1,4 +1,5 @@
-﻿using BEAPI.Dtos.ListOfValue;
+﻿using BEAPI.Dtos.Category;
+using BEAPI.Dtos.ListOfValue;
 using BEAPI.Dtos.Value;
 
 namespace BEAPI.Services.IServices
@@ -10,5 +11,9 @@ namespace BEAPI.Services.IServices
         Task<List<ListOfValueDto>> GetListProductProperty();
 
         Task<List<ValueDto>> GetAllValueProductProperty();
+
+        Task DeactivateOrActiveProductPropertyAsync(Guid valueId);
+
+        Task EditProductPropertyAsync(UpdateCategoryValueDto dto);
     }
 }

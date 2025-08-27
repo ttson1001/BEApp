@@ -84,5 +84,49 @@ namespace BEAPI.Controllers
                 });
             }
         }
+
+        [HttpPut("[action]")]
+        public async Task<IActionResult> DeactivateOrActiveProductProperty([FromQuery] Guid valueId)
+        {
+            try
+            {
+                await _productPropertySerivce.DeactivateOrActiveProductPropertyAsync(valueId);
+                return Ok(new ResponseDto
+                {
+                    Message = "ProductProperty Deactivate Or Active successfully",
+                    Data = null,
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
+            }
+        }
+
+        [HttpPut("[action]")]
+        public async Task<IActionResult> EditProductProperty([FromQuery] UpdateCategoryValueDto updateCategoryValueDto)
+        {
+            try
+            {
+                await _productPropertySerivce.EditProductPropertyAsync(updateCategoryValueDto);
+                return Ok(new ResponseDto
+                {
+                    Message = "ProductProperty Edit successfully",
+                    Data = null,
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
+            }
+        }
     }
 }
