@@ -28,10 +28,21 @@ namespace BEAPI.Services
 
         public async Task RegisterAsync(RegisterDto registerDto)
         {
-            var existingUser = await _userRepo.Get().Where(u => u.UserName == registerDto.UserName || u.Email == registerDto.Email || u.PhoneNumber == registerDto.PhoneNumber).FirstOrDefaultAsync();
+            var existingUser = await _userRepo.Get()
+                    .Where(u => u.UserName == registerDto.UserName
+                             || u.Email == registerDto.Email
+                             || u.PhoneNumber == registerDto.PhoneNumber)
+                    .FirstOrDefaultAsync();
             if (existingUser != null)
             {
-                throw new Exception(ExceptionConstant.UserAlreadyExists);
+                if (existingUser.UserName == registerDto.UserName)
+                    throw new Exception(ExceptionConstant.UserNameAlreadyExists);
+
+                if (existingUser.Email == registerDto.Email)
+                    throw new Exception(ExceptionConstant.EmailAlreadyExists);
+
+                if (existingUser.PhoneNumber == registerDto.PhoneNumber)
+                    throw new Exception(ExceptionConstant.PhoneNumberAlreadyExists);
             }
             var user = _mapper.Map<User>(registerDto);
             await _userRepo.AddAsync(user);
@@ -59,10 +70,13 @@ namespace BEAPI.Services
                 throw new Exception("Acount is not verify");
             }
 
+            user.DeviceId = dto.DeviceId;
+
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 throw new Exception(ExceptionConstant.InvalidCredentials);
 
             var token = _jwtService.GenerateToken(user, null);
+            await _userRepo.SaveChangesAsync();
             return (token, user);
         }
 

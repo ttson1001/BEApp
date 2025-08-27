@@ -112,8 +112,23 @@ namespace BEAPI.Services
 
         public async Task CreateUserAsync(UserCreateDto dto)
         {
-            if (await _userRepo.Get().AnyAsync(u => u.Email == dto.Email || u.UserName == dto.UserName || u.PhoneNumber == dto.PhoneNumber))
-                throw new Exception("Email, username or Phonenumber have been already.");
+            var existingUser = await _userRepo.Get()
+                .Where(u => u.Email == dto.Email
+                         || u.UserName == dto.UserName
+                         || u.PhoneNumber == dto.PhoneNumber)
+                .FirstOrDefaultAsync();
+
+            if (existingUser != null)
+            {
+                if (existingUser.Email == dto.Email)
+                    throw new Exception("Email has already been registered.");
+
+                if (existingUser.UserName == dto.UserName)
+                    throw new Exception("Username has already been taken.");
+
+                if (existingUser.PhoneNumber == dto.PhoneNumber)
+                    throw new Exception("Phone number has already been used.");
+            }
 
             var user = new User
             {
@@ -138,6 +153,16 @@ namespace BEAPI.Services
 
             if (user.Role?.Name == "Elder")
                 throw new Exception("Cannot update Elder with this endpoint");
+
+            var existingUser = await _userRepo.Get()
+               .Where(u => u.PhoneNumber == dto.PhoneNumber)
+               .FirstOrDefaultAsync();
+
+            if (existingUser != null)
+            {
+                if (existingUser.PhoneNumber == dto.PhoneNumber)
+                    throw new Exception("Phone number has already been used.");
+            }
 
             if (!string.IsNullOrWhiteSpace(dto.FullName)) user.FullName = dto.FullName;
             if (!string.IsNullOrWhiteSpace(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
@@ -216,12 +241,12 @@ namespace BEAPI.Services
             var qrBytes = qrCode.GetGraphic(20);
             var qrBase64 = Convert.ToBase64String(qrBytes);
 
-            var token = await LoginByQrAsync(tokens);
+            var token = await LoginByQrAsync(tokens, null);
 
             return (token, $"data:image/png;base64,{qrBase64}");
         }
 
-        public async Task<string> LoginByQrAsync(string token)
+        public async Task<string> LoginByQrAsync(string token, string? deviceId)
         {
             var principal = _jwtService.ValidateToken(token) ?? throw new Exception("Invalid or expired token");
             var elderId = principal.FindFirst("UserId")?.Value;
@@ -229,6 +254,8 @@ namespace BEAPI.Services
                 throw new Exception("Invalid token data");
 
             var elder = await _userRepo.Get().Include(x => x.Role).FirstOrDefaultAsync(x => x.Id == Guid.Parse(elderId));
+            elder.DeviceId = deviceId;
+            await _userRepo.SaveChangesAsync();
             return elder == null ? throw new Exception(ExceptionConstant.ElderNotFound) : _jwtService.GenerateToken(elder, null);
         }
 

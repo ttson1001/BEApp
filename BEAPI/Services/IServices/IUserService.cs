@@ -7,7 +7,7 @@ namespace BEAPI.Services.IServices
     public interface IUserService
     {
         Task CreateElder(ElderRegisterDto elderRegisterDto, Guid userId);
-        Task<string> LoginByQrAsync(string token);
+        Task<string> LoginByQrAsync(string token, string? deviceId);
         Task<(string Token, string QrBase64)> GenerateElderLoginQrAsync(Guid elderId);
         Task<PagedResult<UserListDto>> FilterUsersAsync(UserFilterDto request);
         Task CreateUserAsync(UserCreateDto dto);

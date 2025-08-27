@@ -105,7 +105,7 @@ namespace BEAPI.Controllers
 
 
         [HttpPost("[action]")]
-        public async Task<IActionResult> QrLogin([FromQuery] string token)
+        public async Task<IActionResult> QrLogin([FromQuery] string token, [FromQuery] string? deviceId)
         {
             try
             {

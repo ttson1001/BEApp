@@ -17,6 +17,7 @@ namespace BEAPI.Entities
         public DateTimeOffset? OtpExpiredAt { get; set; }
         public bool IsOtpUsed { get; set; } = false;
         public bool IsVerified { get; set; } = false;
+        public string? DeviceId { get; set; }
         public string? RefreshToken { get; set; }
         [MaxLength(256)]
         public string? UserName { get; set; }

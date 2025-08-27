@@ -12,5 +12,8 @@
         public const string UserIdMissing = "User ID is missing from the token. Please log in again.";
         public const string NotFound = "Not found";
         public const string AlreadyExists = "Already exists";
+        public const string UserNameAlreadyExists = "Username already exists.";
+        public const string EmailAlreadyExists = "Email already exists.";
+        public const string PhoneNumberAlreadyExists = "Phone number already exists.";
     }
 }
