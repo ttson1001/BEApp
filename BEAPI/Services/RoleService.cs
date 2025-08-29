@@ -33,5 +33,16 @@ namespace BEAPI.Services
             return _mapper.Map<List<RoleDto>>(rs);
         }
 
+        public async Task<List<RoleDto>> GetRolesFilterAsync()
+        {
+            var excludeIds = new Guid[]{Guid.Parse("11111111-1111-1111-1111-111111111111")};
+
+            var rs = await _repository.Get()
+                .Where(r => !excludeIds.Contains(r.Id))
+                .ToListAsync();
+
+            return _mapper.Map<List<RoleDto>>(rs);
+        }
+
     }
 }

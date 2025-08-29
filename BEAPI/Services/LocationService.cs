@@ -23,7 +23,7 @@ public class LocationService : ILocationService
 
     private async Task<JsonElement> GetJsonAsync(string endpoint, HttpMethod method, object? body = null)
     {
-        var request = new HttpRequestMessage(method, $"{_baseUrl}/{endpoint}");
+        var request = new HttpRequestMessage(method, $"{_baseUrl}{endpoint}");
         request.Headers.Add("Token", _token);
 
         if (body != null)

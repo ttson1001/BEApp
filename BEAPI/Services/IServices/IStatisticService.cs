@@ -11,6 +11,6 @@ namespace BEAPI.Services.IServices
         Task<List<StatisticCountDto>> GetTotalRevenuesAsync(TimeScope timeFrame, DateTime? chosenDate);
         Task<TopNProductStatisticDto> GetTopNProductsAsync(int topN);
         Task<TopNCustomerStatisticDto> GetTopNCustomersAsync(int topN);
-        Task<Object> GetCurrentStatisticsAsync();
+        Task<StatisticResponseDto> GetCurrentStatisticsAsync();
     }
 }

@@ -148,7 +148,7 @@ namespace BEAPI.Services
 
         public async Task<List<ListOfValueDto>> GetListCategory()
         {
-            var listCaterory = await _repository.Get().Include(x => x.Values).ThenInclude(x => x.ChildListOfValue).Where(x => x.Type == Entities.Enum.MyValueType.Category).ToListAsync();
+            var listCaterory = await _repository.Get().Include(x => x.Values).ThenInclude(x => x.ChildListOfValue).Where(x => x.Type == Entities.Enum.MyValueType.Category && x.Note != "CATEGORY").ToListAsync();
 
             return _mapper.Map<List<ListOfValueDto>>(listCaterory);
         }

@@ -43,50 +43,96 @@ namespace BEAPI.Services
             return await GetStatisticsAsync(_userRepository, timeScope, date, x => x.CreationDate);
         }
 
-        public Task<List<StatisticCountDto>> GetTotalRevenuesAsync(TimeScope timeScope, DateTime? chosenDate)
+        public async Task<List<StatisticCountDto>> GetTotalRevenuesAsync(TimeScope timeScope, DateTime? chosenDate)
         {
             var date = chosenDate ?? DateTime.UtcNow;
-            var dummyResult = new List<StatisticCountDto>();
 
-            if (timeScope == TimeScope.Year)
+            return timeScope switch
             {
-                for (int month = 1; month <= 12; month++)
-                {
-                    dummyResult.Add(new StatisticCountDto
-                    {
-                        TimePeriod = new DateTime(date.Year, month, 1).ToString(StatisticConstants.YearMonthFormat),
-                        Count = month * 10 // fake value
-                    });
-                }
-            }
-            else if (timeScope == TimeScope.Month)
-            {
-                int daysInMonth = DateTime.DaysInMonth(date.Year, date.Month);
-                for (int day = 1; day <= daysInMonth; day++)
-                {
-                    dummyResult.Add(new StatisticCountDto
-                    {
-                        TimePeriod = new DateTime(date.Year, date.Month, day).ToString(StatisticConstants.FullDateFormat),
-                        Count = day % 5 * 3 // fake value
-                    });
-                }
-            }
-            else // Week
-            {
-                var startOfWeek = date.Date.AddDays(-(int)date.DayOfWeek + (int)DayOfWeek.Monday);
-                for (int i = 0; i < 7; i++)
-                {
-                    var currentDate = startOfWeek.AddDays(i);
-                    dummyResult.Add(new StatisticCountDto
-                    {
-                        TimePeriod = currentDate.ToString(StatisticConstants.FullDateFormat),
-                        Count = i * 7 // fake value
-                    });
-                }
-            }
-
-            return Task.FromResult(dummyResult);
+                TimeScope.Year => await GetYearlyRevenue(date.Year),
+                TimeScope.Month => await GetMonthlyRevenue(date.Year, date.Month),
+                TimeScope.Week => await GetWeeklyRevenue(date),
+                _ => await GetYearlyRevenue(date.Year)
+            };
         }
+
+        private async Task<List<StatisticCountDto>> GetYearlyRevenue(int year)
+        {
+            var stats = await _orderRepository.Get()
+                .Where(o => o.CreationDate.HasValue && o.CreationDate.Value.Year == year && !o.IsDeleted)
+                .GroupBy(o => o.CreationDate!.Value.Month)
+                .Select(g => new StatisticCountDto
+                {
+                    TimePeriod = new DateTime(year, g.Key, 1).ToString(StatisticConstants.YearMonthFormat),
+                    Count = g.Sum(x => (int)x.TotalPrice)
+                })
+                .ToListAsync();
+
+            foreach (var month in Enumerable.Range(1, 12))
+            {
+                var key = new DateTime(year, month, 1).ToString(StatisticConstants.YearMonthFormat);
+                if (!stats.Any(s => s.TimePeriod == key))
+                    stats.Add(new StatisticCountDto { TimePeriod = key, Count = 0 });
+            }
+
+            return stats.OrderBy(s => s.TimePeriod).ToList();
+        }
+
+        private async Task<List<StatisticCountDto>> GetMonthlyRevenue(int year, int month)
+        {
+            var stats = await _orderRepository.Get()
+                .Where(o => o.CreationDate.HasValue &&
+                            o.CreationDate.Value.Year == year &&
+                            o.CreationDate.Value.Month == month &&
+                            !o.IsDeleted)
+                .GroupBy(o => o.CreationDate!.Value.Day)
+                .Select(g => new StatisticCountDto
+                {
+                    TimePeriod = new DateTime(year, month, g.Key).ToString(StatisticConstants.FullDateFormat),
+                    Count = g.Sum(x => (int)x.TotalPrice)
+                })
+                .ToListAsync();
+
+            var daysInMonth = DateTime.DaysInMonth(year, month);
+            foreach (var day in Enumerable.Range(1, daysInMonth))
+            {
+                var key = new DateTime(year, month, day).ToString(StatisticConstants.FullDateFormat);
+                if (!stats.Any(s => s.TimePeriod == key))
+                    stats.Add(new StatisticCountDto { TimePeriod = key, Count = 0 });
+            }
+
+            return stats.OrderBy(s => s.TimePeriod).ToList();
+        }
+
+        private async Task<List<StatisticCountDto>> GetWeeklyRevenue(DateTime chosenDate)
+        {
+            var startOfWeek = chosenDate.Date.AddDays(-(int)chosenDate.DayOfWeek + (int)DayOfWeek.Monday);
+            var endOfWeek = startOfWeek.AddDays(7);
+
+            var stats = await _orderRepository.Get()
+                .Where(o => o.CreationDate.HasValue &&
+                            o.CreationDate.Value.Date >= startOfWeek &&
+                            o.CreationDate.Value.Date < endOfWeek &&
+                            !o.IsDeleted)
+                .GroupBy(o => o.CreationDate!.Value.Date)
+                .Select(g => new StatisticCountDto
+                {
+                    TimePeriod = g.Key.ToString(StatisticConstants.FullDateFormat),
+                    Count = g.Sum(x => (int)x.TotalPrice)
+                })
+                .ToListAsync();
+
+            for (int i = 0; i < 7; i++)
+            {
+                var date = startOfWeek.AddDays(i);
+                var key = date.ToString(StatisticConstants.FullDateFormat);
+                if (!stats.Any(s => s.TimePeriod == key))
+                    stats.Add(new StatisticCountDto { TimePeriod = key, Count = 0 });
+            }
+
+            return stats.OrderBy(s => s.TimePeriod).ToList();
+        }
+
 
         public async Task<TopNProductStatisticDto> GetTopNProductsAsync(int topN)
         {
@@ -132,33 +178,60 @@ namespace BEAPI.Services
             };
         }
 
-        //TODO Remove Dummy
-        public Task<object> GetCurrentStatisticsAsync()
+        public async Task<StatisticResponseDto> GetCurrentStatisticsAsync()
         {
-            var dummy = new
-            {
+            var now = DateTime.UtcNow;
+            var firstDayThisMonth = new DateTime(now.Year, now.Month, 1);
+            var firstDayLastMonth = firstDayThisMonth.AddMonths(-1);
+            var lastDayLastMonth = firstDayThisMonth.AddDays(-1);
 
-                RevenueStatisticResponse = new
+            // Query database
+            var totalRevenue = await _orderRepository.Get()
+                .Where(o => o.CreationDate >= firstDayThisMonth)
+                .SumAsync(o => (decimal?)o.TotalPrice) ?? 0;
+
+            var totalRevenueLastMonth = await _orderRepository.Get()
+                .Where(o => o.CreationDate >= firstDayLastMonth && o.CreationDate <= lastDayLastMonth)
+                .SumAsync(o => (decimal?)o.TotalPrice) ?? 0;
+
+            var totalOrders = await _orderRepository.Get()
+                .CountAsync(o => o.CreationDate >= firstDayThisMonth);
+
+            var totalOrdersLastMonth = await _orderRepository.Get()
+                .CountAsync(o => o.CreationDate >= firstDayLastMonth && o.CreationDate <= lastDayLastMonth);
+
+            var totalUsers = await _userRepository.Get()
+                .CountAsync(u => u.CreationDate >= firstDayThisMonth);
+
+            var totalUsersLastMonth = await _userRepository.Get()
+                .CountAsync(u => u.CreationDate >= firstDayLastMonth && u.CreationDate <= lastDayLastMonth);
+
+            return new StatisticResponseDto
+            {
+                RevenueStatisticResponse = new RevenueStatisticResponseDto
                 {
-                    TotalRevenue = 1850000000,
-                    TotalRevenueLastMonth = 1580000000,
-                    PercentageCompareLastMonth = 17.1
+                    TotalRevenue = totalRevenue,
+                    TotalRevenueLastMonth = totalRevenueLastMonth,
+                    PercentageCompareLastMonth = totalRevenueLastMonth == 0 ? 100 :
+                        Math.Round(((double)(totalRevenue - totalRevenueLastMonth) / (double)totalRevenueLastMonth) * 100, 2)
                 },
-                OrderStatisticResponse = new
+                OrderStatisticResponse = new OrderStatisticResponseDto
                 {
-                    TotalOrders = 34,
-                    TotalOrdersLastMonth = 28,
-                    PercentageCompareLastMonth = 19.7
+                    TotalOrders = totalOrders,
+                    TotalOrdersLastMonth = totalOrdersLastMonth,
+                    PercentageCompareLastMonth = totalOrdersLastMonth == 0 ? 100 :
+                        Math.Round(((double)(totalOrders - totalOrdersLastMonth) / totalOrdersLastMonth) * 100, 2)
                 },
-                UserStatisticResponse = new
+                UserStatisticResponse = new UserStatisticResponseDto
                 {
-                    TotalUsers = 78,
-                    TotalUsersLastMonth = 73,
-                    PercentageCompareLastMonth = 6.5
+                    TotalUsers = totalUsers,
+                    TotalUsersLastMonth = totalUsersLastMonth,
+                    PercentageCompareLastMonth = totalUsersLastMonth == 0 ? 100 :
+                        Math.Round(((double)(totalUsers - totalUsersLastMonth) / totalUsersLastMonth) * 100, 2)
                 }
             };
-            return Task.FromResult((object)dummy);
         }
+
 
         private async Task<List<StatisticCountDto>> GetStatisticsAsync<TEntity>(
             IRepository<TEntity> repo,

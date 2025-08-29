@@ -155,7 +155,7 @@ namespace BEAPI.Controllers
         }
 
         [HttpPut("[action]/{productId}")]
-        public async Task<IActionResult> Search(string productId)
+        public async Task<IActionResult> DeActiveOrActiveProduct(string productId)
         {
             try
             {

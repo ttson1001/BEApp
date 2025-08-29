@@ -25,5 +25,17 @@ namespace BEAPI.Controllers
                 Data = provinces
             });
         }
+
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetRolesFilterAsync()
+        {
+            var provinces = await _roleService.GetRolesFilterAsync();
+            return Ok(new ResponseDto
+            {
+                Message = "Get Roles successfully",
+                Data = provinces
+            });
+        }
     }
 }
