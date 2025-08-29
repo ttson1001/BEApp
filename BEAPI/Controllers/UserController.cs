@@ -109,7 +109,7 @@ namespace BEAPI.Controllers
         {
             try
             {
-                var newToken = await _userService.LoginByQrAsync(token);
+                var newToken = await _userService.LoginByQrAsync(token, deviceId);
 
                 var response = new ResponseDto
                 {

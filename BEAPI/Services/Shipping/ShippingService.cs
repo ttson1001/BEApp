@@ -141,7 +141,7 @@ namespace BEAPI.Services.Shipping
             order.ShippingCode = code;
             order.ExpectedDeliveryTime = etd;
             order.ShippingStatus = "created";
-            order.OrderStatus = Entities.Enum.OrderStatus.PendingConfirm;
+            order.OrderStatus = Entities.Enum.OrderStatus.PendingChecked;
 
             AddEvent(order.Id, "created", "create");
             await _db.SaveChangesAsync(ct);
