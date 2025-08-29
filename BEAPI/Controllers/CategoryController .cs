@@ -189,6 +189,27 @@ namespace BEAPI.Controllers
             }
         }
 
+        [HttpPut("[action]")]
+        public async Task<IActionResult> UpdateCategoryValue([FromBody] UpdateCategoryValueDto dtos)
+        {
+            try
+            {
+                await _categoryService.UpdateCategoryValue(dtos);
+                return Ok(new ResponseDto
+                {
+                    Message = "Category updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
+            }
+        }
+
         [HttpGet("[action]")]
         public async Task<IActionResult> GetTree()
         {

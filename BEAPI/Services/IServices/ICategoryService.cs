@@ -10,6 +10,7 @@ namespace BEAPI.Services.IServices
         Task<ListOfValueTreeDto> GetListOfValueTreeAsync();
         Task CreateListCategory(List<CreateCategoryValueDto> categoryValueDtos);
         Task CreateListSubCategory(CreateSubCategoryValueDto categorySubValueDtos);
+        Task UpdateCategoryValue(UpdateCategoryValueDto dto);
         Task LinkSubCategory(LinkCategoryDto linkCategoryDto);
         Task<List<ListOfValueDto>> GetListCategory();
         Task<List<ListOfValueDto>> GetListCategoryNoValue();

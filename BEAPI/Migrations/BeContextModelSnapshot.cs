@@ -1278,6 +1278,9 @@ namespace BEAPI.Migrations
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int>("PresenceStatus")
+                        .HasColumnType("int");
+
                     b.Property<string>("RefreshToken")
                         .HasColumnType("nvarchar(max)");
 
@@ -1336,6 +1339,7 @@ namespace BEAPI.Migrations
                             IsVerified = true,
                             PasswordHash = "$2a$11$X9X4SPGxvVdQGQKkJkGZbOGXfHP4L7lqMZtYxQz4WPrGz7G6oUu0K",
                             PhoneNumber = "0901234567",
+                            PresenceStatus = 1,
                             RewardPoint = 0,
                             RoleId = new Guid("11111111-1111-1111-1111-111111111111"),
                             UserName = "nguyenvana"
@@ -1354,6 +1358,7 @@ namespace BEAPI.Migrations
                             IsVerified = true,
                             PasswordHash = "$2a$11$X9X4SPGxvVdQGQKkJkGZbOGXfHP4L7lqMZtYxQz4WPrGz7G6oUu0K",
                             PhoneNumber = "0909876543",
+                            PresenceStatus = 1,
                             RewardPoint = 0,
                             RoleId = new Guid("22222222-2222-2222-2222-222222222222"),
                             UserName = "tranthib"
@@ -1371,6 +1376,7 @@ namespace BEAPI.Migrations
                             IsVerified = true,
                             PasswordHash = "$2a$11$X9X4SPGxvVdQGQKkJkGZbOGXfHP4L7lqMZtYxQz4WPrGz7G6oUu0K",
                             PhoneNumber = "0912345678",
+                            PresenceStatus = 1,
                             RewardPoint = 0,
                             RoleId = new Guid("33333333-3333-3333-3333-333333333333"),
                             UserName = "admin1"

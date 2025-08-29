@@ -1,5 +1,6 @@
 ﻿using BEAPI.Dtos.Common;
 using BEAPI.Dtos.Product;
+using BEAPI.Helper;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -141,6 +142,28 @@ namespace BEAPI.Controllers
                 {
                     Message = "Product list retrieved successfully.",
                     Data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Message = ex.Message,
+                    Data = null
+                });
+            }
+        }
+
+        [HttpPut("[action]/{productId}")]
+        public async Task<IActionResult> Search(string productId)
+        {
+            try
+            {
+                await _service.DeActiveOrActiveProduct(GuidHelper.ParseOrThrow(productId,"Product Id"));
+
+                return Ok(new ResponseDto
+                {
+                    Message = "Product updated successfully.",
                 });
             }
             catch (Exception ex)

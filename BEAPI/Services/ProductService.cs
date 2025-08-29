@@ -297,6 +297,19 @@ namespace BEAPI.Services
             };
         }
 
+        public async Task DeActiveOrActiveProduct(Guid productId)
+        {
+            var product = await _productRepo.Get()
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+                throw new Exception("Product not found.");
+
+            product.IsDeleted = !product.IsDeleted;
+            _productRepo.Update(product);
+            await _productRepo.SaveChangesAsync();
+        }
+
         public async Task<PagedResult<ProductListDto>> SearchProductActiveAsync(ProductSearchDto dto)
         {
             var query = _productRepo.Get()

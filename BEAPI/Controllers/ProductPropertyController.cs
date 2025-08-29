@@ -108,7 +108,7 @@ namespace BEAPI.Controllers
         }
 
         [HttpPut("[action]")]
-        public async Task<IActionResult> EditProductProperty([FromQuery] UpdateCategoryValueDto updateCategoryValueDto)
+        public async Task<IActionResult> EditProductProperty([FromBody] UpdateCategoryValueDto updateCategoryValueDto)
         {
             try
             {

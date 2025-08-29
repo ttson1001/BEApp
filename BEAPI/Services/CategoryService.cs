@@ -60,6 +60,30 @@ namespace BEAPI.Services
             await _valueRepo.SaveChangesAsync();
         }
 
+        public async Task UpdateCategoryValue(UpdateCategoryValueDto dto)
+        {
+            var value = await _valueRepo.Get()
+                .Include(v => v.ChildListOfValue)
+                .FirstOrDefaultAsync(v => v.Id == dto.Id && v.Type == Entities.Enum.MyValueType.Category);
+
+            if (value == null)
+                throw new Exception("Category Value not found");
+
+            value.Code = dto.Code;
+            value.Label = dto.Label;
+            value.Description = dto.Description;
+
+            if (value.ChildListOfValue != null)
+            {
+                value.ChildListOfValue.Label = dto.Label;
+                value.ChildListOfValue.Note = dto.Code;
+            }
+
+            _valueRepo.Update(value);
+            await _valueRepo.SaveChangesAsync();
+        }
+
+
         public async Task CreateListSubCategory(CreateSubCategoryValueDto categorySubValueDtos)
         {
             var root = await _repository.Get()
