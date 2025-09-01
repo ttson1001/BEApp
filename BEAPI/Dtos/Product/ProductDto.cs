@@ -13,6 +13,7 @@ namespace BEAPI.Dtos.Product
         public string? Height { get; set; }
         public string? Length { get; set; }
         public string? Width { get; set; }
+        public bool IsActive { get; set; }
         public DateTimeOffset? ManufactureDate { get; set; }
         public DateTimeOffset? ExpirationDate { get; set; }
         public List<ValueDto> Categories { get; set; } = new();

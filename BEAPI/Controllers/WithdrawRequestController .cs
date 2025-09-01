@@ -48,6 +48,20 @@ namespace BEAPI.Controllers
             }
         }
 
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetAllRequestsAsync()
+        {
+            try
+            {
+                var result = await _service.GetAllRequestsAsync();
+                return Ok(new ResponseDto { Message = "Success", Data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
         [HttpPost("{id}/[action]")]
         public async Task<IActionResult> ApproveWithdraw(string id)
         {
@@ -85,5 +99,6 @@ namespace BEAPI.Controllers
                 return BadRequest(new ResponseDto { Message = ex.Message });
             }
         }
+
     }
 }

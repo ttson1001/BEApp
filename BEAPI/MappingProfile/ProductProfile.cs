@@ -11,6 +11,8 @@ namespace BEAPI.MappingProfile
             CreateMap<ProductCreateDto, Product>();
 
             CreateMap<Product, ProductDto>()
+                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src =>
+                        src.IsDeleted))
                 .ForMember(dest => dest.Categories, opt => opt.MapFrom(src =>
                         src.ProductCategoryValues.Select(pc => pc.Value)))
                 .ForMember(d => d.Id, o => o.MapFrom(s => s.Id.ToString()));

@@ -62,6 +62,23 @@ namespace BEAPI.Services
                 .ToListAsync();
         }
 
+        public async Task<List<WithdrawRequestDto>> GetAllRequestsAsync()
+        {
+            return await _withdrawRepo.Get()
+                .Select(x => new WithdrawRequestDto
+                {
+                    Id = x.Id,
+                    BankName = x.BankName,
+                    BankAccountNumber = x.BankAccountNumber,
+                    AccountHolder = x.AccountHolder,
+                    Note = x.Note,
+                    Amount = x.Amount,
+                    Status = x.Status,
+                    CreatedAt = x.CreationDate,
+                })
+                .ToListAsync();
+        }
+
         public async Task<bool> ApproveAsync(Guid requestId)
         {
             var request = await _withdrawRepo.Get().FirstOrDefaultAsync(x => x.Id == requestId);

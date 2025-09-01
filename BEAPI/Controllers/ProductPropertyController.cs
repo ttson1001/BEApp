@@ -86,7 +86,7 @@ namespace BEAPI.Controllers
         }
 
         [HttpPut("[action]")]
-        public async Task<IActionResult> DeactivateOrActiveProductProperty([FromQuery] Guid valueId)
+        public async Task<IActionResult> DeActivateOrActiveProductProperty([FromQuery] Guid valueId)
         {
             try
             {
@@ -129,7 +129,7 @@ namespace BEAPI.Controllers
             }
         }
 
-        [HttpPost("{id}/add-values")]
+        [HttpPost("{id}/[action]")]
         public async Task<IActionResult> AddValues(Guid id, [FromBody] List<ValueCreateOnlyDto> values)
         {
             try

@@ -2,8 +2,8 @@
 {
     public enum PresenceStatus
     {
-        online,
-        offline,
-        busy
+        Online,
+        Offline,
+        Busy
     }
 }

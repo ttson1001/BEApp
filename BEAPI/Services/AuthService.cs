@@ -71,7 +71,7 @@ namespace BEAPI.Services
             }
 
             user.DeviceId = dto.DeviceId;
-            user.PresenceStatus = Entities.Enum.PresenceStatus.online;
+            user.PresenceStatus = Entities.Enum.PresenceStatus.Online;
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 throw new Exception(ExceptionConstant.InvalidCredentials);

@@ -49,6 +49,7 @@ namespace BEAPI.MappingProfile
 
             CreateMap<Value, CategoryValueDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsDeleted))
                 .ForMember(dest => dest.ChildrenId, opt => opt.MapFrom(src => src.ChildListOfValue.Id.ToString() ?? null))
                 .ForMember(dest => dest.ChildrentLabel, opt => opt.MapFrom(src => src.ChildListOfValue.Label.ToString() ?? null));
 

@@ -7,6 +7,7 @@ using BEAPI.Dtos.Elder;
 using BEAPI.Dtos.Promotion;
 using BEAPI.Dtos.User;
 using BEAPI.Entities;
+using BEAPI.Entities.Enum;
 using BEAPI.Exceptions;
 using BEAPI.Helper;
 using BEAPI.Model;
@@ -145,6 +146,22 @@ namespace BEAPI.Services
             await _userRepo.SaveChangesAsync();
         }
 
+        public async Task ChangePresenceStatusAsync(string userId, PresenceStatus newStatus)
+        {
+            var guidUser = GuidHelper.ParseOrThrow(userId, nameof(userId));
+
+            var user = await _userRepo.Get()
+                .FirstOrDefaultAsync(u => u.Id == guidUser)
+                ?? throw new Exception("User not found");
+
+            if (user.Role?.Name == "Admin" && newStatus == PresenceStatus.Offline)
+                throw new Exception("You cannot force Admin user offline.");
+
+            user.PresenceStatus = newStatus;
+
+            await _userRepo.SaveChangesAsync();
+        }
+
         public async Task UpdateUserAsync(UserUpdateDto dto)
         {
             var userId = GuidHelper.ParseOrThrow(dto.Id, nameof(dto.Id));
@@ -171,6 +188,8 @@ namespace BEAPI.Services
 
             await _userRepo.SaveChangesAsync();
         }
+
+       
 
         public async Task BanOrUnbanUserAsync(string userId)
         {

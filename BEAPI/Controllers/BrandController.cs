@@ -39,7 +39,7 @@ namespace BEAPI.Controllers
         }
 
         [HttpPut("[action]")]
-        public async Task<IActionResult> DeactivateOrActiveBrand([FromQuery] Guid valueId)
+        public async Task<IActionResult> DeActivateOrActiveBrand([FromQuery] Guid valueId)
         {
             try
             {
