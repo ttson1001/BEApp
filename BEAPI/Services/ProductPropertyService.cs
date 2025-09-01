@@ -46,6 +46,28 @@ namespace BEAPI.Services
             await _repository.SaveChangesAsync();
         }
 
+        public async Task AddValuesByListOfValuesIdAsync(List<ValueCreateOnlyDto> values, Guid id)
+        {
+            var listEntity = await _repository.Get()
+                .Include(x => x.Values)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (listEntity == null)
+                throw new Exception("ProductProperty not found");
+
+            var newValues = values.Select(val => new Value
+            {
+                Code = val.Code,
+                Label = val.Label,
+                Description = val.Description,
+                Type = Entities.Enum.MyValueType.ProductProperty,
+                ListOfValue = listEntity
+            }).ToList();
+
+            listEntity.Values.AddRange(newValues);
+            await _repository.SaveChangesAsync();
+        }
+
         public async Task<List<ListOfValueDto>> GetListProductProperty()
         {
             var list = await _repository.Get().Include(x => x.Values).Where(x => x.Type == Entities.Enum.MyValueType.ProductProperty).ToListAsync();

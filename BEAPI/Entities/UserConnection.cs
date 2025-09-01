@@ -22,5 +22,6 @@ namespace BEAPI.Entities
 
         public string? SkippedConsultants { get; set; }
 
+        public Guid? ProductId { get; set; }
     }
 }

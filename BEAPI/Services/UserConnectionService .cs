@@ -16,7 +16,7 @@ namespace BEAPI.Services
             _userRepository = userRepository;
         }
 
-        public async Task ConnectAsync(Guid userId, string channelName, string type, string token, Guid? consultant = null)
+        public async Task ConnectAsync(Guid userId, string channelName, string type, string token,Guid? prodcutId, Guid? consultant = null)
         {
             if (consultant == null)
             {
@@ -39,7 +39,8 @@ namespace BEAPI.Services
                 ChannelName = channelName,
                 Type = type,
                 Token = token,
-                Consultant = consultant
+                Consultant = consultant,
+                ProductId = prodcutId,
             };
 
             await _repo.AddAsync(entity);
@@ -109,7 +110,8 @@ namespace BEAPI.Services
                     ChannelName = x.ChannelName,
                     Type = x.Type,
                     Token = x.Token,
-                    Consultant = x.Consultant
+                    Consultant = x.Consultant,
+                    ProductId = x.ProductId
                 })
                 .FirstOrDefaultAsync();
         }

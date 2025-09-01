@@ -11,5 +11,6 @@ namespace BEAPI.Services.IServices
         Task ChangeIsDeletedAsync(string id);
         Task UpdateElderAdressAsync(List<UpdateAddressDto> addressesDto, string userId);
         Task UpdateElderCategory(List<UpdateCategoryElderDto> updateCategoryElderDtos, Guid elderId);
+        Task<ElderFinanceDto> GetElderFinanceAsync(Guid elderId);
     }
 }

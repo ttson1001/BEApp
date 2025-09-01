@@ -114,7 +114,7 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 app.UseCors("AllowAllOrigin");
 EnsureMigrate(app);
-
+FirebaseNotificationService.Initialize(builder.Configuration);
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();

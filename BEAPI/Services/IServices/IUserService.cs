@@ -14,5 +14,7 @@ namespace BEAPI.Services.IServices
         Task UpdateUserAsync(UserUpdateDto dto);
         Task BanOrUnbanUserAsync(string userId);
         Task<UserDetailDto> GetDetailAsync(Guid id);
+
+        Task SendNotificationToUserAsync(Guid userId, string title, string body);
     }
 }

@@ -8,6 +8,7 @@ using BEAPI.Helper;
 using BEAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MimeKit;
 
 namespace BEAPI.Controllers
 {
@@ -60,6 +61,20 @@ namespace BEAPI.Controllers
                 var userId = User.GetUserId();
                 var rs = await _elderService.GetElderByCusId(userId);
                 return Ok(new ResponseDto { Data = rs, Message = "Get elder successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
+        [HttpGet("[action]/{elderId}")]
+        public async Task<IActionResult> GetElderFinanceAsync(Guid elderId)
+        {
+            try
+            {
+                var rs = await _elderService.GetElderFinanceAsync(elderId);
+                return Ok(new ResponseDto { Data = rs, Message = "Get elder finance successfully." });
             }
             catch (Exception ex)
             {

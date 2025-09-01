@@ -13,5 +13,6 @@
 
         public User Consultant { get; set; }
 
+        public Guid? ProductId { get; set; }
     }
 }

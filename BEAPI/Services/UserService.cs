@@ -295,5 +295,23 @@ namespace BEAPI.Services
 
             return dto;
         }
+
+        public async Task SendNotificationToUserAsync(Guid userId, string title, string body)
+        {
+            var user = await _userRepo.Get()
+                .Where(x => x.Id == userId)
+                .Select(x => new { x.Id, x.DeviceId })
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                throw new Exception("User not found");
+
+            if (string.IsNullOrWhiteSpace(user.DeviceId))
+                throw new Exception("User does not have a registered device.");
+
+            await FirebaseNotificationService.SendNotificationAsync(user.DeviceId, title, body);
+        }
+
+
     }
 }

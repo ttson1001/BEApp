@@ -128,5 +128,38 @@ namespace BEAPI.Controllers
                 });
             }
         }
+
+        [HttpPost("{id}/add-values")]
+        public async Task<IActionResult> AddValues(Guid id, [FromBody] List<ValueCreateOnlyDto> values)
+        {
+            try
+            {
+                if (values == null || values.Count == 0)
+                {
+                    return BadRequest(new ResponseDto
+                    {
+                        Data = null,
+                        Message = "Values list is empty."
+                    });
+                }
+
+                await _productPropertySerivce.AddValuesByListOfValuesIdAsync(values, id);
+
+                return Ok(new ResponseDto
+                {
+                    Message = "Values added successfully",
+                    Data = null
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto
+                {
+                    Data = null,
+                    Message = ex.Message
+                });
+            }
+        }
+
     }
 }

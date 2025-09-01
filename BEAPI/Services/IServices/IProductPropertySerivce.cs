@@ -15,5 +15,7 @@ namespace BEAPI.Services.IServices
         Task DeactivateOrActiveProductPropertyAsync(Guid valueId);
 
         Task EditProductPropertyAsync(UpdateCategoryValueDto dto);
+
+        Task AddValuesByListOfValuesIdAsync(List<ValueCreateOnlyDto> values, Guid id);
     }
 }

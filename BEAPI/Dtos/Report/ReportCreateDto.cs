@@ -6,5 +6,6 @@
         public string Description { get; set; } = string.Empty;
         public Guid UserId { get; set; }
         public Guid ConsultantId { get; set; }
+        public Guid? ProductId { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using BEAPI.Dtos.Addreess;
 using BEAPI.Dtos.Category;
 using BEAPI.Dtos.Elder;
 using BEAPI.Entities;
+using BEAPI.Entities.Enum;
 using BEAPI.Helper;
 using BEAPI.Repositories;
 using BEAPI.Services.IServices;
@@ -14,6 +15,7 @@ namespace BEAPI.Services
     public class ElderService : IElderService
     {
         private readonly IRepository<User> _repository;
+        private readonly IRepository<Order> _orderRepo;
         private readonly IRepository<Address> _addressRepo;
         private readonly IRepository<District> _districtRepo;
         private readonly IRepository<Ward> _warRepo;
@@ -21,7 +23,7 @@ namespace BEAPI.Services
         private readonly IRepository<UserCategoryValue> _userCateValueRepo;
         private readonly IMapper _mapper;
 
-        public ElderService(IMapper mapper, IRepository<UserCategoryValue> userCateValueRepo, IRepository<User> repository, IRepository<Address> addressRepo, IRepository<District> districtRepo, IRepository<Ward> warRepo, IRepository<Province> provineRepo)
+        public ElderService(IMapper mapper, IRepository<Order> orderRepo, IRepository<UserCategoryValue> userCateValueRepo, IRepository<User> repository, IRepository<Address> addressRepo, IRepository<District> districtRepo, IRepository<Ward> warRepo, IRepository<Province> provineRepo)
         {
             _mapper = mapper;
             _repository = repository;
@@ -30,6 +32,7 @@ namespace BEAPI.Services
             _warRepo = warRepo;
             _provineRepo = provineRepo;
             _userCateValueRepo = userCateValueRepo;
+            _orderRepo = orderRepo;
         }
 
         public async Task<List<ElderDto>> GetElderByCusId(string cusId)
@@ -147,6 +150,31 @@ namespace BEAPI.Services
             else { user.DeletionDate = null; }
             _repository.Update(user);
             await _repository.SaveChangesAsync();
+        }
+
+        public async Task<ElderFinanceDto> GetElderFinanceAsync(Guid elderId)
+        {
+            var spentLimit = await _repository.Get()
+                .Where(u => u.Id == elderId)
+                .Select(u => u.Spendlimit)
+                .FirstOrDefaultAsync();
+
+            if (spentLimit == default)
+                throw new Exception("Elder not found");
+
+            var totalSpentThisMonth = await _orderRepo.Get()
+               .Where(o => o.ElderId == elderId
+                            && o.CreationDate.HasValue
+                            && o.CreationDate.Value.Month == DateTimeOffset.UtcNow.Month
+                            && o.CreationDate.Value.Year == DateTimeOffset.UtcNow.Year
+                            && o.OrderStatus == OrderStatus.Paid)
+                .SumAsync(o => (decimal?)o.TotalPrice) ?? 0;
+
+            return new ElderFinanceDto
+            {
+                SpentLimit = spentLimit,
+                TotalSpentThisMonth = totalSpentThisMonth
+            };
         }
     }
 }
