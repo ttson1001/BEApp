@@ -30,7 +30,7 @@ namespace BEAPI.Entities
         public string? EmergencyPhoneNumber { get; set; }
         public Gender? Gender { get; set; }
         public string? RelationShip { get; set; }
-        public PresenceStatus PresenceStatus { get; set; } = PresenceStatus.offline;
+        public PresenceStatus PresenceStatus { get; set; } = PresenceStatus.Offline;
         public int Age { get; set; }
         [MaxLength(2000)]
         public string? Description { get; set; }
