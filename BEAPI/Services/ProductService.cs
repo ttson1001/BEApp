@@ -360,6 +360,7 @@ namespace BEAPI.Services
                     Id = p.Id.ToString(),
                     Name = p.Name,
                     Brand = p.Brand,
+                    IsActive = p.IsDeleted,
                     Price = p.ProductVariants
                         .OrderBy(v => v.CreationDate)
                         .Select(v => v.Price)
