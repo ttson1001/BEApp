@@ -9,10 +9,14 @@ namespace BEAPI.Services
     public class WithdrawRequestService : IWithdrawRequestService
     {
         private readonly IRepository<WithdrawRequest> _withdrawRepo;
+        private readonly IRepository<PaymentHistory> _paymentHistoryRepo;
+        private readonly IRepository<Wallet> _walletRepo;
 
-        public WithdrawRequestService(IRepository<WithdrawRequest> withdrawRepo)
+        public WithdrawRequestService(IRepository<WithdrawRequest> withdrawRepo, IRepository<Wallet> walletRepo, IRepository<PaymentHistory> paymentHistoryRepo)
         {
             _withdrawRepo = withdrawRepo;
+            _paymentHistoryRepo = paymentHistoryRepo;
+            _walletRepo = walletRepo;
         }
 
         public async Task<WithdrawRequestDto> CreateAsync(CreateWithdrawRequestDto dto, Guid userId)
@@ -85,7 +89,20 @@ namespace BEAPI.Services
             if (request == null) return false;
 
             request.Status = WithdrawStatus.Approved;
+            var wallet = await _walletRepo.Get().FirstOrDefaultAsync(x => x.UserId == request.UserId);
+            if (wallet == null) return false;
+            wallet.Amount -= request.Amount;
+
+            var payment = new PaymentHistory
+           {
+             UserId = request.UserId,
+             Amount = request.Amount,
+             PaymentMenthod = "WALLET",
+             PaymentStatus = PaymentStatus.Withdraw
+           };
             _withdrawRepo.Update(request);
+            _walletRepo.Update(wallet);
+            await _paymentHistoryRepo.AddAsync(payment);
             await _withdrawRepo.SaveChangesAsync();
 
             return true;

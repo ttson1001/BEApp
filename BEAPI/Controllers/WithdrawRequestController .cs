@@ -24,7 +24,7 @@ namespace BEAPI.Controllers
         {
             try
             {
-                var userId = Guid.Parse(User.FindFirst("sub")?.Value ?? throw new Exception("User not authenticated"));
+                var userId = Guid.Parse(User.FindFirst("UserId")?.Value ?? throw new Exception("User not authenticated"));
                 var result = await _service.CreateAsync(dto, userId);
                 return Ok(new ResponseDto { Message = "Success", Data = result });
             }
