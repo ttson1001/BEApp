@@ -43,6 +43,34 @@ namespace BEAPI.Controllers
             }
         }
 
+        [HttpPost("[action]")]
+        public async Task<IActionResult> UserDisconnect([FromQuery] Guid userId)
+        {
+            try
+            {
+                await _service.UserDisconnectAsync(userId);
+                return Ok(new ResponseDto { Message = "Disconnected" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> UserAcceptAsync([FromQuery] Guid userId)
+        {
+            try
+            {
+                await _service.UserAcceptAsync(userId);
+                return Ok(new ResponseDto { Message = "Disconnected" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseDto { Message = ex.Message });
+            }
+        }
+
         [HttpGet("consultant/{consultantId}")]
         public async Task<IActionResult> GetByConsultant(Guid consultantId)
         {

@@ -1,5 +1,6 @@
 ﻿using BEAPI.Dtos.Common;
 using BEAPI.Entities;
+using BEAPI.Entities.Enum;
 using BEAPI.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +24,7 @@ namespace BEAPI.Services
                 var consultantRoleId = Guid.Parse("44444444-4444-4444-4444-444444444444");
 
                 var randomConsultant = await _userRepository.Get()
-                    .Where(c => c.RoleId == consultantRoleId)
+                    .Where(c => c.RoleId == consultantRoleId && c.PresenceStatus == PresenceStatus.Online)
                     .OrderBy(x => Guid.NewGuid())
                     .FirstOrDefaultAsync();
 
@@ -39,7 +40,7 @@ namespace BEAPI.Services
                 ChannelName = channelName,
                 Type = type,
                 Token = token,
-                Consultant = consultant,
+                ConsultantId = consultant,
                 ProductId = prodcutId,
             };
 
@@ -49,15 +50,70 @@ namespace BEAPI.Services
 
         public async Task DisconnectAsync(Guid consultantId)
         {
-            var entity = await _repo.Get().Where(x => x.Consultant == consultantId).FirstOrDefaultAsync();
-             _repo.Delete(entity);
+            var entity = await _repo.Get()
+                .FirstOrDefaultAsync(x => x.ConsultantId == consultantId);
+
+            if (entity == null)
+                throw new InvalidOperationException($"No connection found for consultant {consultantId}.");
+
+            var consultant = await _userRepository.Get()
+                .FirstOrDefaultAsync(x => x.Id == entity.ConsultantId);
+
+            if (consultant == null)
+                throw new InvalidOperationException($"Consultant {entity.ConsultantId} not found.");
+
+            consultant.PresenceStatus = Entities.Enum.PresenceStatus.Online;
+            _userRepository.Update(consultant);
+
+            _repo.Delete(entity);
+            await _repo.SaveChangesAsync();
+        }
+
+        public async Task UserDisconnectAsync(Guid userId)
+        {
+            var entity = await _repo.Get()
+                .FirstOrDefaultAsync(x => x.UserId == userId);
+
+            if (entity == null)
+                throw new InvalidOperationException($"No connection found for user {userId}.");
+
+            var consultant = await _userRepository.Get()
+                .FirstOrDefaultAsync(x => x.Id == entity.ConsultantId);
+
+            if (consultant == null)
+                throw new InvalidOperationException($"Consultant {entity.ConsultantId} not found.");
+
+            consultant.PresenceStatus = Entities.Enum.PresenceStatus.Online;
+            _userRepository.Update(consultant);
+
+            _repo.Delete(entity);
+            await _repo.SaveChangesAsync();
+        }
+
+        public async Task UserAcceptAsync(Guid userId)
+        {
+            var entity = await _repo.Get()
+                .FirstOrDefaultAsync(x => x.ConsultantId == userId);
+
+            if (entity == null)
+                throw new InvalidOperationException($"No connection found for user {userId}.");
+
+            var consultant = await _userRepository.Get()
+                .FirstOrDefaultAsync(x => x.Id == entity.ConsultantId);
+
+            if (consultant == null)
+                throw new InvalidOperationException($"Consultant {entity.ConsultantId} not found.");
+
+            consultant.PresenceStatus = Entities.Enum.PresenceStatus.Busy;
+            _userRepository.Update(consultant);
+
             await _repo.SaveChangesAsync();
         }
 
         public async Task Decline(Guid consultantId)
         {
             var entity = await _repo.Get()
-                .FirstOrDefaultAsync(x => x.Consultant == consultantId);
+                .FirstOrDefaultAsync(x => x.ConsultantId == consultantId);
 
             if (entity == null)
                 throw new Exception("Consultant not found");
@@ -87,7 +143,7 @@ namespace BEAPI.Services
 
             if (newConsultant != null)
             {
-                entity.Consultant = newConsultant.Id;
+                entity.ConsultantId = newConsultant.Id;
                 _repo.Update(entity);
             }
             else
@@ -101,7 +157,7 @@ namespace BEAPI.Services
         public async Task<UserConnectionDto?> GetByConsultantAsync(Guid consultantId)
         {
             return await _repo.Get().Include(x => x.User)
-                .Where(x => x.Consultant == consultantId)
+                .Where(x => x.ConsultantId == consultantId && x.Consultant.PresenceStatus == Entities.Enum.PresenceStatus.Online)
                 .Select(x => new UserConnectionDto
                 {
                     Id = x.Id,
@@ -110,7 +166,7 @@ namespace BEAPI.Services
                     ChannelName = x.ChannelName,
                     Type = x.Type,
                     Token = x.Token,
-                    Consultant = x.Consultant,
+                    Consultant = x.ConsultantId,
                     ProductId = x.ProductId
                 })
                 .FirstOrDefaultAsync();

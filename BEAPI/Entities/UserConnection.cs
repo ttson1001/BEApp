@@ -15,7 +15,8 @@ namespace BEAPI.Entities
         [Required]
         public string Type { get; set; } = null!; // VD: "signalR"
 
-        public Guid? Consultant { get; set; } // consultantId
+        public Guid? ConsultantId { get; set; } // consultantId
+        public User Consultant { get; set; }
 
         [Required]
         public string Token { get; set; } = null!; // connectionId
