@@ -200,23 +200,40 @@ namespace BEAPI.Services
             return _mapper.Map<List<ProductDto>>(entities);
         }
 
-        public async Task<ProductDto> GetById(string productId)
+        public async Task<ProductDto> GetById(string productId, string role)
         {
             var guidId = GuidHelper.ParseOrThrow(productId, nameof(productId));
 
-            var entity = await _productRepo.Get()
-                .Include(p => p.ProductVariants)
-                    .ThenInclude(v => v.ProductImages)
-                .Include(p => p.ProductVariants)
-                    .ThenInclude(v => v.ProductVariantValues)
-                        .ThenInclude(vv => vv.Value)
+            var query = _productRepo.Get()
                 .Include(p => p.ProductCategoryValues)
-                    .ThenInclude(x => x.Value)
-                .FirstOrDefaultAsync(x => x.Id == guidId)
+                    .ThenInclude(x => x.Value);
+
+            if (role != "admin")
+            {
+                query = query
+                    .Include(p => p.ProductVariants.Where(v => !v.IsDeleted))
+                        .ThenInclude(v => v.ProductImages)
+                    .Include(p => p.ProductVariants.Where(v => !v.IsDeleted))
+                        .ThenInclude(v => v.ProductVariantValues)
+                            .ThenInclude(vv => vv.Value);
+            }
+            else
+            {
+                query = query
+                    .Include(p => p.ProductVariants)
+                        .ThenInclude(v => v.ProductImages)
+                    .Include(p => p.ProductVariants)
+                        .ThenInclude(v => v.ProductVariantValues)
+                            .ThenInclude(vv => vv.Value);
+            }
+
+            var entity = await query.FirstOrDefaultAsync(x => x.Id == guidId)
                 ?? throw new Exception("Product not found");
 
             return _mapper.Map<ProductDto>(entity);
         }
+
+
 
         public async Task<PagedResult<ProductListDto>> SearchAsync(ProductSearchDto dto)
         {
@@ -314,7 +331,7 @@ namespace BEAPI.Services
         public async Task<PagedResult<ProductListDto>> SearchProductActiveAsync(ProductSearchDto dto)
         {
             var query = _productRepo.Get()
-                .Where(p => !p.IsDeleted)
+                  .Where(p => !p.IsDeleted)
                 .Include(p => p.ProductVariants)
                     .ThenInclude(v => v.ProductImages)
                 .Include(p => p.ProductCategoryValues)

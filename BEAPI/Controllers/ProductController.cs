@@ -86,12 +86,14 @@ namespace BEAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("[action]/{productId}")]
         public async Task<IActionResult> GetById(string productId)
         {
             try
             {
-                var result = await _service.GetById(productId);
+                var role = User?.FindFirst("Role")?.Value;
+                var result = await _service.GetById(productId, role);
                 return Ok(new ResponseDto
                 {
                     Message = "Get product successfully",
