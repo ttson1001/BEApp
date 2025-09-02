@@ -62,8 +62,8 @@ namespace BEAPI.Controllers
             }
         }
 
-        [HttpPost("{id}/[action]")]
-        public async Task<IActionResult> ApproveWithdraw(string id)
+        [HttpPost("[action]")]
+        public async Task<IActionResult> ApproveWithdraw([FromQuery] string id)
         {
             try
             {
@@ -81,8 +81,8 @@ namespace BEAPI.Controllers
             }
         }
 
-        [HttpPost("{id}/[action]")]
-        public async Task<IActionResult> RejectWithdraw(string id, [FromBody] string reason)
+        [HttpPost("[action]")]
+        public async Task<IActionResult> RejectWithdraw([FromQuery] string id, [FromQuery] string reason)
         {
             try
             {
