@@ -86,20 +86,30 @@ namespace BEAPI.Services
         public async Task<bool> ApproveAsync(Guid requestId)
         {
             var request = await _withdrawRepo.Get().FirstOrDefaultAsync(x => x.Id == requestId);
-            if (request == null) return false;
+            if (request == null)
+                throw new InvalidOperationException($"Withdraw request {requestId} not found.");
+
+            if (request.Status == WithdrawStatus.Approved)
+                throw new InvalidOperationException($"Withdraw request {requestId} is already approved.");
+
+            var wallet = await _walletRepo.Get().FirstOrDefaultAsync(x => x.UserId == request.UserId);
+            if (wallet == null)
+                throw new InvalidOperationException($"Wallet for user {request.UserId} not found.");
+
+            if (wallet.Amount < request.Amount)
+                throw new InvalidOperationException("Insufficient balance in wallet.");
 
             request.Status = WithdrawStatus.Approved;
-            var wallet = await _walletRepo.Get().FirstOrDefaultAsync(x => x.UserId == request.UserId);
-            if (wallet == null) return false;
             wallet.Amount -= request.Amount;
 
             var payment = new PaymentHistory
-           {
-             UserId = request.UserId,
-             Amount = request.Amount,
-             PaymentMenthod = "WALLET",
-             PaymentStatus = PaymentStatus.Withdraw
-           };
+            {
+                UserId = request.UserId,
+                Amount = request.Amount,
+                PaymentMenthod = "WALLET",
+                PaymentStatus = PaymentStatus.Withdraw
+            };
+
             _withdrawRepo.Update(request);
             _walletRepo.Update(wallet);
             await _paymentHistoryRepo.AddAsync(payment);
