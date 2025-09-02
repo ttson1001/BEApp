@@ -23,3 +23,6 @@ EXPOSE 80
 EXPOSE 443
 
 ENTRYPOINT ["dotnet", "BEAPI.dll"]
+
+RUN apt-get update && apt-get install -y tzdata
+ENV TZ=Asia/Ho_Chi_Minh
