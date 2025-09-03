@@ -167,7 +167,7 @@ namespace BEAPI.Services
                     Type = x.Type,
                     Token = x.Token,
                     Consultant = x.ConsultantId,
-                    ProductId = x.ProductId
+                    //ProductId = x.ProductId
                 })
                 .FirstOrDefaultAsync();
         }

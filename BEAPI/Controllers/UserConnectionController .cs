@@ -20,7 +20,8 @@ namespace BEAPI.Controllers
         {
             try
             {
-                await _service.ConnectAsync(dto.UserId, dto.ChannelName, dto.Type, dto.Token, dto.ProductId, dto.Consultant);
+                //await _service.ConnectAsync(dto.UserId, dto.ChannelName, dto.Type, dto.Token, dto.ProductId, dto.Consultant);
+                await _service.ConnectAsync(dto.UserId, dto.ChannelName, dto.Type, dto.Token, null, dto.Consultant);
                 return Ok(new ResponseDto { Message = "Connected", Data = null });
             }
             catch (Exception ex)
