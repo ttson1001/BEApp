@@ -24,7 +24,7 @@ namespace BEAPI.Services
         public async Task<List<Province>> GetProvincesAsync()
         {
             return await _provinceRepo.Get()
-                .Where(p => !p.IsDeleted)
+                .Where(p => !p.IsDeleted && p.Code != null)
                 .OrderBy(p => p.ProvinceName)
                 .ToListAsync();
         }
