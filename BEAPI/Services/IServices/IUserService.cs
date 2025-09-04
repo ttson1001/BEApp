@@ -14,7 +14,7 @@ namespace BEAPI.Services.IServices
         Task CreateUserAsync(UserCreateDto dto);
         Task UpdateUserAsync(UserUpdateDto dto);
         Task BanOrUnbanUserAsync(string userId);
-        Task<PresenceStatus> GetConsutantStatus(Guid id)
+        Task<PresenceStatus> GetConsutantStatus(Guid id);
         Task<UserDetailDto> GetDetailAsync(Guid id);
         Task ChangePresenceStatusAsync(string userId, PresenceStatus newStatus);
         Task SendNotificationToUserAsync(Guid userId, string title, string body);
