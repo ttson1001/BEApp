@@ -2,6 +2,7 @@
 using BEAPI.Entities;
 using BEAPI.Entities.Enum;
 using BEAPI.Repositories;
+using BEAPI.Services.IServices;
 using Microsoft.EntityFrameworkCore;
 
 namespace BEAPI.Services
@@ -11,12 +12,14 @@ namespace BEAPI.Services
         private readonly IRepository<WithdrawRequest> _withdrawRepo;
         private readonly IRepository<PaymentHistory> _paymentHistoryRepo;
         private readonly IRepository<Wallet> _walletRepo;
+        private readonly IUserService _userService;
 
-        public WithdrawRequestService(IRepository<WithdrawRequest> withdrawRepo, IRepository<Wallet> walletRepo, IRepository<PaymentHistory> paymentHistoryRepo)
+        public WithdrawRequestService(IUserService userService, IRepository<WithdrawRequest> withdrawRepo, IRepository<Wallet> walletRepo, IRepository<PaymentHistory> paymentHistoryRepo)
         {
             _withdrawRepo = withdrawRepo;
             _paymentHistoryRepo = paymentHistoryRepo;
             _walletRepo = walletRepo;
+            _userService = userService;
         }
 
         public async Task<WithdrawRequestDto> CreateAsync(CreateWithdrawRequestDto dto, Guid userId)
@@ -109,12 +112,12 @@ namespace BEAPI.Services
                 PaymentMenthod = "WALLET",
                 PaymentStatus = PaymentStatus.Withdraw
             };
-
+            
             _withdrawRepo.Update(request);
             _walletRepo.Update(wallet);
             await _paymentHistoryRepo.AddAsync(payment);
             await _withdrawRepo.SaveChangesAsync();
-
+            await _userService.SendNotificationToUserAsync(request.UserId, "Silver Cart", "Đơn rút tiền của bạn đã được chấp thuận");
             return true;
         }
 
@@ -126,7 +129,7 @@ namespace BEAPI.Services
             request.Status = WithdrawStatus.Rejected;
             _withdrawRepo.Update(request);
             await _withdrawRepo.SaveChangesAsync();
-
+            await _userService.SendNotificationToUserAsync(request.UserId, "Silver Cart", $"Đơn rút tiền của bạn đã bị từ chối vs lí do {reason}");
             return true;
         }
     }

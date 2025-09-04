@@ -22,6 +22,7 @@ namespace BEAPI.Services
         private readonly IRepository<Address> _addressRepo;
         private readonly IRepository<Wallet> _walletRepo;
         private readonly ShippingService _shipService;
+        private readonly IUserService _userService;
         private readonly IMapper _mapper;
 
         public OrderService(IRepository<Order> orderRepo,
@@ -32,6 +33,7 @@ namespace BEAPI.Services
                             IRepository<UserPromotion> userPromotionRepo,
                             IRepository<Wallet> walletRepo,
                             ShippingService shipService,
+                            IUserService userService,
                             IMapper mapper)
         {
             _orderRepo = orderRepo;
@@ -43,6 +45,7 @@ namespace BEAPI.Services
             _userPromotionRepo = userPromotionRepo;
             _walletRepo = walletRepo;
             _shipService = shipService;
+            _userService = userService;
         }
 
         public async Task CreateOrderAsync(OrderCreateDto dto, bool isPaid)
@@ -482,7 +485,7 @@ namespace BEAPI.Services
                 PaymentStatus = PaymentStatus.Refund,
                 OrderId = GuidHelper.ParseOrThrow(dto.OrderId, "id")
             };
-
+            await _userService.SendNotificationToUserAsync(order.CustomerId, "Silver Cart", "Đơn hàng của bạn đã được hủy và hoàn tiền");
             await _paymentHistoryRepo.AddAsync(payment);
             await _orderRepo.SaveChangesAsync();
             return new CancelOrderResponseDto

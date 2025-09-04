@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using System.Net;
 using System.Globalization;
 using BEAPI.Services.Shipping;
+using BEAPI.Services.IServices;
 
 namespace BEAPI.PaymentService.VnPay
 {
@@ -17,13 +18,15 @@ namespace BEAPI.PaymentService.VnPay
         private readonly VnPaySettings _settings;
         private readonly IRepository<Cart> _repository;
         private readonly ShippingService _shippingService;
+        private readonly IUserService _userService;
 
-        public VNPayService(IOptions<VnPaySettings> options, ShippingService shippingService, IRepository<UserPromotion> userPromotionRepo, IRepository<Cart> repository)
+        public VNPayService(IUserService userService, IOptions<VnPaySettings> options, ShippingService shippingService, IRepository<UserPromotion> userPromotionRepo, IRepository<Cart> repository)
         {
             _settings = options.Value;
             _repository = repository;
             _userPromotionRepo = userPromotionRepo;
             _shippingService = shippingService;
+            _userService = userService;
         }
 
         public async Task<string> VNPayAsync(HttpContext context, VnPayRequest vnPayRequest)
@@ -34,7 +37,7 @@ namespace BEAPI.PaymentService.VnPay
             var (serviceId, serviceTypeId, fee) = await _shippingService.RecalcAndSaveFeeDefaultAsync(GuidHelper.ParseOrThrow(vnPayRequest.AddressId,"AddressId"));
 
             var cartId = GuidHelper.ParseOrThrow(vnPayRequest.CartId, nameof(vnPayRequest.CartId));
-            var cart = ValidateCart(cartId);
+            var cart = await ValidateCart(cartId);
 
             var subTotal = cart.Items.Sum(i => i.ProductPrice * i.Quantity);
 
@@ -132,8 +135,7 @@ namespace BEAPI.PaymentService.VnPay
             return userPromotion;
         }
 
-
-        private Cart ValidateCart(Guid cartId)
+        private async Task<Cart> ValidateCart(Guid cartId)
         {
             var cart = _repository.Get()
                 .Include(x => x.Items)
@@ -144,7 +146,10 @@ namespace BEAPI.PaymentService.VnPay
                     (u.ElderId != null ? u.Status == CartStatus.Pending : true)
                 )
                 ?? throw new Exception("Cart not found or not in pending status");
-
+            if(cart.ElderId != null)
+            {
+                await _userService.SendNotificationToUserAsync((Guid)cart.ElderId, "Silver Cart", "Giỏi hàng của bạn đã được chấp nhận");
+            }
 
             if (!cart.Items.Any())
                 throw new Exception("Cart is empty");

@@ -1,5 +1,6 @@
 ﻿using BEAPI.Database;
 using BEAPI.Entities;
+using BEAPI.Services.IServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -11,15 +12,17 @@ namespace BEAPI.Services.Shipping
         private readonly GhnClient _ghn;
         private readonly GhnOptions _opt;
         private readonly ILogger<ShippingService> _logger;
+        private readonly IUserService _userService;
 
         private const int W_DEFAULT = 1000; // gram
         private const int L_DEFAULT = 20;   // cm
         private const int WIDTH_DEF = 15;   // cm
         private const int H_DEFAULT = 10;   // cm
 
-        public ShippingService(BeContext db, GhnClient ghn, GhnOptions opt, ILogger<ShippingService> logger)
+        public ShippingService(IUserService userService, BeContext db, GhnClient ghn, GhnOptions opt, ILogger<ShippingService> logger)
         {
             _db = db; _ghn = ghn; _opt = opt; _logger = logger;
+            _userService = userService;
         }
 
         private (int weight, int length, int width, int height) GetPackDimsFromOrder(Order order)
@@ -109,7 +112,7 @@ namespace BEAPI.Services.Shipping
                 .Include(o => o.Customer)
                 .FirstOrDefaultAsync(o => o.Id == orderId, ct)
                 ?? throw new Exception("Order not found");
-
+            await _userService.SendNotificationToUserAsync(order.CustomerId, "Silver Cart", "Đơn hàng của bạn vận chuyển đến đơn vị giao hàng");
             EnsureAddress(order);
 
             var (serviceId, serviceTypeId) = await AutoPickServiceAsync(order.DistrictID, ct);
@@ -320,44 +323,7 @@ namespace BEAPI.Services.Shipping
                 ?? throw new Exception("Order not found");
 
             var current = order.OrderStatus;
-            var next = current;
-
-            switch (current)
-            {
-                case Entities.Enum.OrderStatus.Created:
-                    next = Entities.Enum.OrderStatus.Paid;
-                    break;
-
-                case Entities.Enum.OrderStatus.Paid:
-                    next = Entities.Enum.OrderStatus.PendingConfirm;
-                    break;
-
-                case Entities.Enum.OrderStatus.PendingConfirm:
-                    next = Entities.Enum.OrderStatus.PendingPickup;
-                    break;
-
-                case Entities.Enum.OrderStatus.PendingPickup:
-                    next = Entities.Enum.OrderStatus.PendingDelivery;
-                    break;
-
-                case Entities.Enum.OrderStatus.PendingDelivery:
-                    next = Entities.Enum.OrderStatus.Shipping;
-                    break;
-
-                case Entities.Enum.OrderStatus.Shipping:
-                    next = Entities.Enum.OrderStatus.Delivered;
-                    break;
-
-                case Entities.Enum.OrderStatus.Delivered:
-                    next = Entities.Enum.OrderStatus.Completed;
-                    break;
-
-                case Entities.Enum.OrderStatus.Completed:
-                case Entities.Enum.OrderStatus.Canceled:
-                case Entities.Enum.OrderStatus.Fail:
-                    next = current;
-                    break;
-            }
+            var next = GetNextStatus(current);
 
             if (next != current)
             {
@@ -365,7 +331,54 @@ namespace BEAPI.Services.Shipping
                 await _db.SaveChangesAsync(ct);
             }
 
+            var nextText = GetOrderStatusText(next);
+
+            // gửi cho customer
+            await _userService.SendNotificationToUserAsync(
+                order.CustomerId,
+                "Silver Cart",
+                $"Đơn hàng của bạn đã chuyển sang trạng thái: {nextText}"
+            );
+
+            // gửi cho elder nếu có
+            if (order.ElderId != null)
+            {
+                await _userService.SendNotificationToUserAsync(
+                    order.ElderId.Value,
+                    "Silver Cart",
+                    $"Đơn hàng bạn theo dõi đã chuyển sang trạng thái: {nextText}"
+                );
+            }
+
             return next;
         }
+        private static Entities.Enum.OrderStatus GetNextStatus(Entities.Enum.OrderStatus current) =>
+            current switch
+            {
+                Entities.Enum.OrderStatus.Created => Entities.Enum.OrderStatus.Paid,
+                Entities.Enum.OrderStatus.Paid => Entities.Enum.OrderStatus.PendingConfirm,
+                Entities.Enum.OrderStatus.PendingConfirm => Entities.Enum.OrderStatus.PendingPickup,
+                Entities.Enum.OrderStatus.PendingPickup => Entities.Enum.OrderStatus.PendingDelivery,
+                Entities.Enum.OrderStatus.PendingDelivery => Entities.Enum.OrderStatus.Shipping,
+                Entities.Enum.OrderStatus.Shipping => Entities.Enum.OrderStatus.Delivered,
+                Entities.Enum.OrderStatus.Delivered => Entities.Enum.OrderStatus.Completed,
+                _ => current
+            };
+
+            private static string GetOrderStatusText(Entities.Enum.OrderStatus status) =>
+            status switch
+            {
+                Entities.Enum.OrderStatus.Created => "Mới tạo",
+                Entities.Enum.OrderStatus.Paid => "Đã thanh toán",
+                Entities.Enum.OrderStatus.PendingConfirm => "Chờ xác nhận",
+                Entities.Enum.OrderStatus.PendingPickup => "Chờ lấy hàng",
+                Entities.Enum.OrderStatus.PendingDelivery => "Chờ giao hàng",
+                Entities.Enum.OrderStatus.Shipping => "Đang giao",
+                Entities.Enum.OrderStatus.Delivered => "Đã giao",
+                Entities.Enum.OrderStatus.Completed => "Hoàn tất",
+                Entities.Enum.OrderStatus.Canceled => "Đã hủy",
+                Entities.Enum.OrderStatus.Fail => "Thất bại",
+                _ => status.ToString()
+            };
     }
 }
