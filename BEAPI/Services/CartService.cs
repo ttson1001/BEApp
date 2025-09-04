@@ -110,26 +110,22 @@ namespace BEAPI.Services
             return dto;
         }
 
-        public async Task<List<CartDto>> GetCartsByCustomerIdAsync(string cusId, CartStatus cartStatus)
+        public async Task<CartDto?> GetCartByCustomerIdAsync(string cusId, CartStatus cartStatus)
         {
             var customerId = GuidHelper.ParseOrThrow(cusId, nameof(cusId));
 
-            var carts = await _cartRepo.Get()
+            var cart = await _cartRepo.Get()
                 .AsNoTracking()
                 .Include(x => x.Customer)
                 .Include(x => x.Elder)
-                .Where(x => x.CustomerId == customerId && x.Status == cartStatus)
-                .ToListAsync();
+                .FirstOrDefaultAsync(x => x.CustomerId == customerId && x.Status == cartStatus);
 
-            if (!carts.Any()) return new List<CartDto>();
+            if (cart == null) return null;
 
-            // lấy tất cả cartId để query items 1 lần
-            var cartIds = carts.Select(c => c.Id).ToList();
-
-            var items = await _cartItemRepo.Get()
+            var listCart = await _cartItemRepo.Get()
                 .AsNoTracking()
                 .AsSplitQuery()
-                .Where(ci => cartIds.Contains(ci.CartId))
+                .Where(ci => ci.CartId == cart.Id)
                 .Include(ci => ci.ProductVariant)
                     .ThenInclude(pv => pv.Product)
                 .Include(ci => ci.ProductVariant)
@@ -139,7 +135,7 @@ namespace BEAPI.Services
                         .ThenInclude(pvv => pvv.Value)
                 .ToListAsync();
 
-            return carts.Select(cart => new CartDto
+            return new CartDto
             {
                 CartId = cart.Id,
                 CustomerId = cart.CustomerId,
@@ -147,59 +143,54 @@ namespace BEAPI.Services
                 Status = cart.Status.ToString(),
                 ElderId = cart.ElderId,
                 ElderName = cart.Elder?.FullName,
-                Items = items
-                    .Where(i => i.CartId == cart.Id)
-                    .Select(i =>
+                Items = listCart.Select(i =>
+                {
+                    var pv = i.ProductVariant;
+
+                    var styles = pv?.ProductVariantValues != null
+                        ? string.Join(", ",
+                            pv.ProductVariantValues
+                              .Select(pvv =>
+                                  (pvv.Value?.Label ??
+                                   pvv.Value?.Description ??
+                                   pvv.Value?.Code ?? string.Empty).Trim())
+                              .Where(s => !string.IsNullOrWhiteSpace(s)))
+                        : string.Empty;
+
+                    var imageUrl = pv?.ProductImages?
+                        .Select(img => img.URL)
+                        .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s)) ?? string.Empty;
+
+                    return new CartItemDto
                     {
-                        var pv = i.ProductVariant;
-
-                        var styles = pv?.ProductVariantValues != null
-                            ? string.Join(", ",
-                                pv.ProductVariantValues
-                                  .Select(pvv =>
-                                      (pvv.Value?.Label ??
-                                       pvv.Value?.Description ??
-                                       pvv.Value?.Code ??
-                                       string.Empty).Trim())
-                                  .Where(s => !string.IsNullOrWhiteSpace(s)))
-                            : string.Empty;
-
-                        var imageUrl = pv?.ProductImages?
-                            .Select(img => img.URL)
-                            .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s)) ?? string.Empty;
-
-                        return new CartItemDto
-                        {
-                            ProductVariantId = i.ProductVariantId,
-                            ProductName = pv?.Product?.Name ?? string.Empty,
-                            Quantity = i.Quantity,
-                            ProductPrice = i.ProductPrice,
-                            Discount = (int)(pv?.Discount),
-                            Styles = styles,
-                            ImageUrl = imageUrl
-                        };
-                    }).ToList()
-            }).ToList();
+                        ProductVariantId = i.ProductVariantId,
+                        ProductName = pv?.Product?.Name ?? string.Empty,
+                        Quantity = i.Quantity,
+                        ProductPrice = i.ProductPrice,
+                        Discount = (int)(pv?.Discount),
+                        Styles = styles,
+                        ImageUrl = imageUrl
+                    };
+                }).ToList()
+            };
         }
-        public async Task<List<CartDto>> GetCartsByElderIdAsync(string elderId, CartStatus cartStatus)
+
+        public async Task<CartDto?> GetCartByElderIdAsync(string elderId, CartStatus cartStatus)
         {
-            var elderGuid = GuidHelper.ParseOrThrow(elderId, nameof(elderId));
+            var customerId = GuidHelper.ParseOrThrow(elderId, nameof(elderId));
 
-            var carts = await _cartRepo.Get()
+            var cart = await _cartRepo.Get()
                 .AsNoTracking()
                 .Include(x => x.Customer)
                 .Include(x => x.Elder)
-                .Where(x => x.ElderId == elderGuid && x.Status == cartStatus)
-                .ToListAsync();
+                .FirstOrDefaultAsync(x => x.ElderId == customerId && x.Status == cartStatus);
 
-            if (!carts.Any()) return new List<CartDto>();
+            if (cart == null) return null;
 
-            var cartIds = carts.Select(c => c.Id).ToList();
-
-            var items = await _cartItemRepo.Get()
+            var listCart = await _cartItemRepo.Get()
                 .AsNoTracking()
                 .AsSplitQuery()
-                .Where(ci => cartIds.Contains(ci.CartId))
+                .Where(ci => ci.CartId == cart.Id)
                 .Include(ci => ci.ProductVariant)
                     .ThenInclude(pv => pv.Product)
                 .Include(ci => ci.ProductVariant)
@@ -209,7 +200,7 @@ namespace BEAPI.Services
                         .ThenInclude(pvv => pvv.Value)
                 .ToListAsync();
 
-            return carts.Select(cart => new CartDto
+            return new CartDto
             {
                 CartId = cart.Id,
                 CustomerId = cart.CustomerId,
@@ -217,41 +208,37 @@ namespace BEAPI.Services
                 Status = cart.Status.ToString(),
                 ElderId = cart.ElderId,
                 ElderName = cart.Elder?.FullName,
-                Items = items
-                    .Where(i => i.CartId == cart.Id)
-                    .Select(i =>
+                Items = listCart.Select(i =>
+                {
+                    var pv = i.ProductVariant;
+
+                    var styles = pv?.ProductVariantValues != null
+                        ? string.Join(", ",
+                            pv.ProductVariantValues
+                              .Select(pvv =>
+                                  (pvv.Value?.Label ??
+                                   pvv.Value?.Description ??
+                                   pvv.Value?.Code ?? string.Empty).Trim())
+                              .Where(s => !string.IsNullOrWhiteSpace(s)))
+                        : string.Empty;
+
+                    var imageUrl = pv?.ProductImages?
+                        .Select(img => img.URL)
+                        .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s)) ?? string.Empty;
+
+                    return new CartItemDto
                     {
-                        var pv = i.ProductVariant;
-
-                        var styles = pv?.ProductVariantValues != null
-                            ? string.Join(", ",
-                                pv.ProductVariantValues
-                                  .Select(pvv =>
-                                      (pvv.Value?.Label ??
-                                       pvv.Value?.Description ??
-                                       pvv.Value?.Code ??
-                                       string.Empty).Trim())
-                                  .Where(s => !string.IsNullOrWhiteSpace(s)))
-                            : string.Empty;
-
-                        var imageUrl = pv?.ProductImages?
-                            .Select(img => img.URL)
-                            .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s)) ?? string.Empty;
-
-                        return new CartItemDto
-                        {
-                            ProductVariantId = i.ProductVariantId,
-                            ProductName = pv?.Product?.Name ?? string.Empty,
-                            Quantity = i.Quantity,
-                            ProductPrice = i.ProductPrice,
-                            Discount = (int)(pv?.Discount),
-                            Styles = styles,
-                            ImageUrl = imageUrl
-                        };
-                    }).ToList()
-            }).ToList();
+                        ProductVariantId = i.ProductVariantId,
+                        ProductName = pv?.Product?.Name ?? string.Empty,
+                        Quantity = i.Quantity,
+                        ProductPrice = i.ProductPrice,
+                        Discount = (int)(pv?.Discount),
+                        Styles = styles,
+                        ImageUrl = imageUrl
+                    };
+                }).ToList()
+            };
         }
-
 
         public async Task ReplaceCartAsync(CartReplaceAllDto dto)
         {

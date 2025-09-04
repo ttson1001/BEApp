@@ -10,7 +10,7 @@ namespace BEAPI.Services.IServices
         Task<List<CartDto>> GetAllElderCarts(string userId);
         Task<CartDto?> GetCartByIdAsync(string id);
         Task ChangeStatus(CartStatus cartStatus, string id);
-        Task<List<CartDto>> GetCartsByCustomerIdAsync(string cusId, CartStatus cartStatus);
-        Task<List<CartDto>> GetCartsByElderIdAsync(string elderId, CartStatus cartStatus);
+        Task<CartDto?> GetCartByCustomerIdAsync(string cusId, CartStatus cartStatus);
+        Task<CartDto?> GetCartByElderIdAsync(string elderId, CartStatus cartStatus);
     }
 }
