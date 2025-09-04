@@ -5,7 +5,7 @@ namespace BEAPI.Dtos.Cart
     public class CartReplaceAllDto
     {
         public string CustomerId { get; set; } = string.Empty;
-        [MinLength(1, ErrorMessage = "Cart must have at least one item")]
+        [MinLength(1, ErrorMessage = "Không thể thêm giỏi hàng rỗng")]
         public List<CartItemReplaceAllDto> Items { get; set; } = new();
     }
 }
