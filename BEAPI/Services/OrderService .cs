@@ -479,7 +479,8 @@ namespace BEAPI.Services
                 UserId = order.CustomerId,
                 Amount = order.TotalPrice,
                 PaymentMenthod = "WALLET",
-                PaymentStatus = PaymentStatus.Refund
+                PaymentStatus = PaymentStatus.Refund,
+                OrderId = GuidHelper.ParseOrThrow(dto.OrderId, "id")
             };
 
             await _paymentHistoryRepo.AddAsync(payment);
