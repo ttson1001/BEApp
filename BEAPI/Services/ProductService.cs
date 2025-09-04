@@ -245,9 +245,17 @@ namespace BEAPI.Services
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(dto.Keyword))
-                query = query.Where(p => p.Name.Contains(dto.Keyword) || p.Brand.Contains(dto.Keyword));
+            {
+                var keywords = dto.Keyword
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(k => k.Trim())
+                    .ToList();
 
-            if(dto.CategoryIds != null && dto.CategoryIds.Any())
+                query = query.Where(p =>
+                    keywords.Any(k => p.Name.Contains(k) || p.Brand.Contains(k)));
+            }
+
+            if (dto.CategoryIds != null && dto.CategoryIds.Any())
 {
                 query = query.Where(p => p.ProductCategoryValues.Any(pc => dto.CategoryIds.Contains(pc.ValueId)));
             }
@@ -284,7 +292,7 @@ namespace BEAPI.Services
                     Id = p.Id.ToString(),
                     Name = p.Name,
                     Brand = p.Brand,
-                    IsActive = p.IsDeleted,
+                    IsActive = !p.IsDeleted,
                     Price = p.ProductVariants
                         .OrderBy(v => v.CreationDate)
                         .Select(v => v.Price)
@@ -378,7 +386,7 @@ namespace BEAPI.Services
                     Id = p.Id.ToString(),
                     Name = p.Name,
                     Brand = p.Brand,
-                    IsActive = p.IsDeleted,
+                    IsActive = !p.IsDeleted,
                     Price = p.ProductVariants
                         .OrderBy(v => v.CreationDate)
                         .Select(v => v.Price)
