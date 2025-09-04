@@ -278,6 +278,13 @@ namespace BEAPI.Services
             return elder == null ? throw new Exception(ExceptionConstant.ElderNotFound) : _jwtService.GenerateToken(elder, null);
         }
 
+        public async Task<PresenceStatus> GetConsutantStatus(Guid id)
+        {
+            var user = await _userRepo.Get()
+             .FirstOrDefaultAsync(u => u.Id == id)
+             ?? throw new Exception("User not found");
+            return user.PresenceStatus;
+        }
         public async Task<UserDetailDto> GetDetailAsync(Guid id)
         {
             var user = await _userRepo.Get()
