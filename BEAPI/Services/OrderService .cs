@@ -453,6 +453,16 @@ namespace BEAPI.Services
                      _walletRepo.Update(wallet);
                     isRefunded = true;
                 }
+
+                var adminWallet = await _walletRepo.Get()
+                    .FirstOrDefaultAsync(x => x.UserId == GuidHelper.ParseOrThrow("33333333-3333-3333-3333-333333333333","id"));
+
+                if (adminWallet != null)
+                {
+                    adminWallet.Amount -= order.TotalPrice;
+                    _walletRepo.Update(adminWallet);
+                    isRefunded = true;
+                }
             }
 
             _orderRepo.Update(order);
