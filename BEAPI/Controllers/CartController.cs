@@ -99,7 +99,7 @@ namespace BEAPI.Controllers
         {
             try
             {
-                var cart = await _service.GetCartByCustomerIdAsync(customerId, status);
+                var cart = await _service.GetCartsByCustomerIdAsync(customerId, status);
 
                 if (cart == null)
                 {
@@ -131,7 +131,7 @@ namespace BEAPI.Controllers
         {
             try
             {
-                var cart = await _service.GetCartByElderIdAsync(elderId, status);
+                var cart = await _service.GetCartsByElderIdAsync(elderId, status);
 
                 if (cart == null)
                 {
