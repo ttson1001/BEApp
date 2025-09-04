@@ -433,11 +433,10 @@ namespace BEAPI.Services
 
             var cancellableStatuses = new[] 
             { 
-                OrderStatus.Created, 
-                OrderStatus.Paid
+                OrderStatus.Delivered
             };
 
-            if (!cancellableStatuses.Contains(order.OrderStatus))
+            if (cancellableStatuses.Contains(order.OrderStatus))
             {
                 throw new Exception($"Order cannot be cancelled in current status: {order.OrderStatus}. Only orders in 'Created' or 'Paid' status can be cancelled.");
             }
