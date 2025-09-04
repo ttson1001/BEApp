@@ -31,7 +31,7 @@ namespace BEAPI.Controllers
         {
             try
             {
-                var result = _vnPayService.VNPay(HttpContext, vnPayRequest);
+                var result = _vnPayService.VNPayAsync(HttpContext, vnPayRequest);
                 return Ok(new { message = "Vnpay successfully", data = result });
             }
             catch (Exception ex)

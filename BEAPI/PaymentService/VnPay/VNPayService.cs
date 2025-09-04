@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Globalization;
+using BEAPI.Services.Shipping;
 
 namespace BEAPI.PaymentService.VnPay
 {
@@ -15,18 +16,22 @@ namespace BEAPI.PaymentService.VnPay
         private readonly IRepository<UserPromotion> _userPromotionRepo;
         private readonly VnPaySettings _settings;
         private readonly IRepository<Cart> _repository;
+        private readonly ShippingService _shippingService;
 
-        public VNPayService(IOptions<VnPaySettings> options, IRepository<UserPromotion> userPromotionRepo, IRepository<Cart> repository)
+        public VNPayService(IOptions<VnPaySettings> options, ShippingService shippingService, IRepository<UserPromotion> userPromotionRepo, IRepository<Cart> repository)
         {
             _settings = options.Value;
             _repository = repository;
             _userPromotionRepo = userPromotionRepo;
+            _shippingService = shippingService;
         }
 
-        public string VNPay(HttpContext context, VnPayRequest vnPayRequest)
+        public async Task<string> VNPayAsync(HttpContext context, VnPayRequest vnPayRequest)
         {
             var createdDate = DateTime.Now;
             var orderId = DateTime.Now.Ticks;
+
+            var (serviceId, serviceTypeId, fee) = await _shippingService.RecalcAndSaveFeeDefaultAsync(GuidHelper.ParseOrThrow(vnPayRequest.AddressId,"AddressId"));
 
             var cartId = GuidHelper.ParseOrThrow(vnPayRequest.CartId, nameof(vnPayRequest.CartId));
             var cart = ValidateCart(cartId);
@@ -47,7 +52,7 @@ namespace BEAPI.PaymentService.VnPay
             int promoPercent = userPromotion?.Promotion?.DiscountPercent ?? 0;
             decimal promoDiscountAmount = (decimal)promoPercent / 100m * baseAfterItemDiscount;
 
-            decimal total = baseAfterItemDiscount - promoDiscountAmount;
+            decimal total = (baseAfterItemDiscount - promoDiscountAmount) + fee;
             if (total < 0) total = 0;
 
             long vnpAmount = (long)Math.Round(total * 100m, MidpointRounding.AwayFromZero);
@@ -73,7 +78,7 @@ namespace BEAPI.PaymentService.VnPay
             return paymentUrl;
         }
 
-        public string VNPayWalletTopUp(HttpContext context, Guid userId, decimal amount)
+        public async Task<string> VNPayWalletTopUp(HttpContext context, Guid userId, decimal amount)
         {
             if (amount <= 0)
             {
@@ -81,7 +86,6 @@ namespace BEAPI.PaymentService.VnPay
             }
             var createdDate = DateTime.Now;
             var orderId = DateTime.Now.Ticks;
-
             long vnpAmount = (long)Math.Round(amount * 100m, MidpointRounding.AwayFromZero);
             var orderInfo = $"Type=WalletTopUp;UserId={userId};Amount={amount.ToString(CultureInfo.InvariantCulture)}";
 

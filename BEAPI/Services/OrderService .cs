@@ -4,8 +4,10 @@ using BEAPI.Dtos.Order;
 using BEAPI.Entities;
 using BEAPI.Entities.Enum;
 using BEAPI.Helper;
+using BEAPI.PaymentService.VnPay;
 using BEAPI.Repositories;
 using BEAPI.Services.IServices;
+using BEAPI.Services.Shipping;
 using Microsoft.EntityFrameworkCore;
 
 namespace BEAPI.Services
@@ -19,6 +21,7 @@ namespace BEAPI.Services
         private readonly IRepository<Cart> _cartRepo;
         private readonly IRepository<Address> _addressRepo;
         private readonly IRepository<Wallet> _walletRepo;
+        private readonly ShippingService _shipService;
         private readonly IMapper _mapper;
 
         public OrderService(IRepository<Order> orderRepo,
@@ -28,6 +31,7 @@ namespace BEAPI.Services
                             IRepository<PaymentHistory> paymentHistoryRepo,
                             IRepository<UserPromotion> userPromotionRepo,
                             IRepository<Wallet> walletRepo,
+                            ShippingService shipService,
                             IMapper mapper)
         {
             _orderRepo = orderRepo;
@@ -38,6 +42,7 @@ namespace BEAPI.Services
             _addressRepo = addressRepo;
             _userPromotionRepo = userPromotionRepo;
             _walletRepo = walletRepo;
+            _shipService = shipService;
         }
 
         public async Task CreateOrderAsync(OrderCreateDto dto, bool isPaid)
@@ -55,6 +60,8 @@ namespace BEAPI.Services
             var cart = await GetPendingCartAsync(dto.CartId);
             var userPromotion = await ValidateAndGetPromotionAsync(dto.UserPromotionId, cart.CustomerId);
 
+            var(serviceId, serviceTypeId, fee) = await _shipService.RecalcAndSaveFeeDefaultAsync(GuidHelper.ParseOrThrow(dto.AddressId, "AddressId"));
+
             var orderDetails = BuildOrderDetails(cart);
             var address = await GetDefaultAddressAsync();
 
@@ -62,7 +69,7 @@ namespace BEAPI.Services
             var itemDiscountAmount = CalculateItemDiscount(orderDetails);
             var promoDiscountAmount = CalculatePromotionDiscount(userPromotion?.Promotion, subTotal - itemDiscountAmount);
 
-            var total = subTotal - itemDiscountAmount - promoDiscountAmount;
+            var total = subTotal - itemDiscountAmount - promoDiscountAmount + fee;
             if (total < 0) total = 0;
 
             string paymentMethod;
@@ -101,6 +108,7 @@ namespace BEAPI.Services
                 StreetAddress = address.StreetAddress,
                 ProvinceID = address.ProvinceID,
                 ProvinceName = address.ProvinceName,
+                ShippingFee = fee,
                 Discount = userPromotion?.Promotion?.DiscountPercent ?? 0
             };
 
