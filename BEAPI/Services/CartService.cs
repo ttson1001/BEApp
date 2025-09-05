@@ -31,7 +31,10 @@ namespace BEAPI.Services
             var cartId = GuidHelper.ParseOrThrow(id, "cartId");
 
             var cart = await _cartRepo.Get().FirstOrDefaultAsync(x => x.Id == cartId) ?? throw new Exception("Cart not found");
-
+            if(cart.Items.Count == 0)
+            {
+                throw new Exception("Không thể tạo yêu cầu với giỏ hàng trống");
+            }
             cart.Status = cartStatus;
             _cartRepo.Update(cart);
             await _cartRepo.SaveChangesAsync();
