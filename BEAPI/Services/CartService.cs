@@ -298,35 +298,78 @@ namespace BEAPI.Services
 
         public async Task<List<CartDto>> GetAllElderCarts(string userId)
         {
-            var customerId = GuidHelper.ParseOrThrow(userId, "userId");
+            var customerId = GuidHelper.ParseOrThrow(userId, nameof(userId));
 
             var carts = await _cartRepo.Get()
+                .AsNoTracking()
                 .Include(x => x.Customer)
                 .Include(x => x.Elder)
-                .Include(x => x.Items)
-                    .ThenInclude(i => i.ProductVariant)
-                        .ThenInclude(pv => pv.Product)
                 .Where(x => x.CustomerId == customerId && x.Elder != null)
                 .ToListAsync();
 
-            var result = carts.Select(cart => new CartDto
+            if (!carts.Any()) return new List<CartDto>();
+
+            var cartIds = carts.Select(c => c.Id).ToList();
+
+            var listCartItems = await _cartItemRepo.Get()
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Where(ci => cartIds.Contains(ci.CartId))
+                .Include(ci => ci.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
+                .Include(ci => ci.ProductVariant)
+                    .ThenInclude(pv => pv.ProductImages)
+                .Include(ci => ci.ProductVariant)
+                    .ThenInclude(pv => pv.ProductVariantValues)
+                        .ThenInclude(pvv => pvv.Value)
+                .ToListAsync();
+
+            var result = carts.Select(cart =>
             {
-                CartId = cart.Id,
-                CustomerId = cart.CustomerId,
-                CustomerName = cart.Customer.FullName,
-                Status = cart.Status.ToString(),
-                ElderId = cart.ElderId,
-                ElderName = cart.Elder?.FullName ?? null,
-                Items = cart.Items.Select(i => new CartItemDto
+                var cartItems = listCartItems.Where(i => i.CartId == cart.Id);
+
+                return new CartDto
                 {
-                    ProductVariantId = i.ProductVariantId,
-                    ProductName = i.ProductVariant.Product.Name ?? "",
-                    Quantity = i.Quantity,
-                    ProductPrice = i.ProductPrice
-                }).ToList()
+                    CartId = cart.Id,
+                    CustomerId = cart.CustomerId,
+                    CustomerName = cart.Customer?.FullName ?? string.Empty,
+                    Status = cart.Status.ToString(),
+                    ElderId = cart.ElderId,
+                    ElderName = cart.Elder?.FullName,
+                    Items = cartItems.Select(i =>
+                    {
+                        var pv = i.ProductVariant;
+
+                        var styles = pv?.ProductVariantValues != null
+                            ? string.Join(", ",
+                                pv.ProductVariantValues
+                                  .Select(pvv =>
+                                      (pvv.Value?.Label ??
+                                       pvv.Value?.Description ??
+                                       pvv.Value?.Code ?? string.Empty).Trim())
+                                  .Where(s => !string.IsNullOrWhiteSpace(s)))
+                            : string.Empty;
+
+                        var imageUrl = pv?.ProductImages?
+                            .Select(img => img.URL)
+                            .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s)) ?? string.Empty;
+
+                        return new CartItemDto
+                        {
+                            ProductVariantId = i.ProductVariantId,
+                            ProductName = pv?.Product?.Name ?? string.Empty,
+                            Quantity = i.Quantity,
+                            ProductPrice = i.ProductPrice,
+                            Discount = (int)(pv?.Discount),
+                            Styles = styles,
+                            ImageUrl = imageUrl
+                        };
+                    }).ToList()
+                };
             }).ToList();
 
             return result;
         }
+
     }
 }
