@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BEAPI.Entities
 {
-    public class PaymentHistory: BaseEntity
+    public class Transaction : BaseEntity
     {
         [Column(TypeName = "decimal(18,2)")]
         public decimal? Amount { get; set; }

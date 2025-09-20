@@ -10,9 +10,9 @@ namespace BEAPI.Services
     public class WalletService : IWalletService
     {
         private readonly IRepository<Wallet> _repository;
-        private readonly IRepository<PaymentHistory> _paymentRepo;
+        private readonly IRepository<Transaction> _paymentRepo;
 
-        public WalletService(IRepository<Wallet> repository, IRepository<PaymentHistory> paymentRepo)
+        public WalletService(IRepository<Wallet> repository, IRepository<Transaction> paymentRepo)
         {
             _repository = repository;
             _paymentRepo = paymentRepo;
@@ -39,7 +39,7 @@ namespace BEAPI.Services
 
             wallet.Amount += amount;
             _repository.Update(wallet);
-            var payment = new PaymentHistory
+            var payment = new Transaction
             {
                 UserId = userId,
                 Amount = amount,

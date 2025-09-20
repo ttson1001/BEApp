@@ -17,7 +17,7 @@ namespace BEAPI.Database
         public DbSet<ListOfValue> ListOfValues { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
-        public DbSet<PaymentHistory> PaymentHistories { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<ProductVariant> ProductVariants { get; set; }
@@ -30,6 +30,7 @@ namespace BEAPI.Database
         public DbSet<OrderShipmentEvent> OrderShipmentEvents { get; set; }
         public DbSet<WithdrawRequest> WithdrawRequests { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<AppDbSettings> AppDbSettings { get; set; }
         public BeContext(DbContextOptions<BeContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -78,9 +79,9 @@ namespace BEAPI.Database
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<PaymentHistory>()
+            modelBuilder.Entity<Transaction>()
                 .HasOne(ph => ph.User)
-                .WithMany(u => u.PaymentHistory)
+                .WithMany(u => u.Transactions)
                 .HasForeignKey(ph => ph.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -225,6 +226,22 @@ namespace BEAPI.Database
                     CreationDate = DateTimeOffset.Parse("2025-08-02T00:00:00Z")
                 }
             );
+
+            modelBuilder.Entity<AppDbSettings>().HasData(
+    new AppDbSettings
+    {
+        Id = new Guid("11111111-1111-1111-1111-111111111111"),
+        Key = "MinAge",
+        Value = "18"
+    },
+    new AppDbSettings
+    {
+        Id = new Guid("22222222-2222-2222-2222-222222222222"),
+        Key = "MaxAge",
+        Value = "65"
+    }
+);
+
 
         }
     }

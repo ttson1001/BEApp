@@ -28,6 +28,7 @@ namespace BEAPI.Services
         private readonly IRepository<Ward> _warRepo;
         private readonly IRepository<Province> _provineRepo;
         private readonly IRepository<Wallet> _walletRepo;
+        private readonly IRepository<AppDbSettings> _appDbSettingRepo;
         private readonly string _baseUrl;
 
         public UserService(IOptions<AppSettings> options,
@@ -58,11 +59,18 @@ namespace BEAPI.Services
             if (elderRegisterDto.BirthDate.Date > DateTimeOffset.UtcNow.AddYears(-age).Date)
                 age--;
 
-            if (age is < 45 or > 120)
-                throw new Exception(age < 45
-                    ? "Invalid BirthDate (must be at least 45 years old)"
-                    : "Age cannot exceed 120 years");
+            var minAge = int.Parse(_appDbSettingRepo.Get()
+                .Where(x => x.Key == "MinAge")
+                .First().Value);
 
+            var maxAge = int.Parse(_appDbSettingRepo.Get()
+                .Where(x => x.Key == "MaxAge")
+                .First().Value);
+
+            if (age < minAge || age > maxAge)
+                throw new Exception(age < minAge
+                    ? $"Invalid BirthDate (must be at least {minAge} years old)"
+                    : $"Age cannot exceed {maxAge} years");
             var user = _mapper.Map<User>(elderRegisterDto);
             user.Age = age;
             user.IsVerified = true;
@@ -291,7 +299,7 @@ namespace BEAPI.Services
                 .Include(u => u.Role)
                 .Include(u => u.Addresses)
                 .Include(u => u.Carts)
-                .Include(u => u.PaymentHistory)
+                .Include(u => u.Transactions)
                 .Include(u => u.UserCategories).ThenInclude(uc => uc.Value)
                 .Include(u => u.UserPromotions).ThenInclude(up => up.Promotion)
                 .FirstOrDefaultAsync(u => u.Id == id)

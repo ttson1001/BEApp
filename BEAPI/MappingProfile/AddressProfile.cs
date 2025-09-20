@@ -9,8 +9,7 @@ namespace BEAPI.MappingProfile
         public AddressProfile() {
 
             CreateMap<CreateAddressDto, Address>();
-            CreateMap<Address, AddressDto>();
-            CreateMap<AddressDto, Address>();
+            CreateMap<Address, AddressDto>().ReverseMap();
             CreateMap<UpdateAddressDto, Address>();
         }
     }

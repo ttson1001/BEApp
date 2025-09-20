@@ -45,7 +45,7 @@ namespace BEAPI.Entities
         public virtual List<UserPromotion> UserPromotions { get; set; } = new();
         public virtual List<Address> Addresses { get; set; } = new List<Address>();
         public virtual List<Cart> Carts { get; set; } = new List<Cart>();
-        public virtual List<PaymentHistory> PaymentHistory { get; set; } = new List<PaymentHistory>();
+        public virtual List<Transaction> Transactions { get; set; } = new List<Transaction>();
         public virtual List<UserCategoryValue> UserCategories { get; set; } = new List<UserCategoryValue>();
     }
 }

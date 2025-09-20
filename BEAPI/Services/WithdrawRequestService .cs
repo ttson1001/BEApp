@@ -10,11 +10,11 @@ namespace BEAPI.Services
     public class WithdrawRequestService : IWithdrawRequestService
     {
         private readonly IRepository<WithdrawRequest> _withdrawRepo;
-        private readonly IRepository<PaymentHistory> _paymentHistoryRepo;
+        private readonly IRepository<Transaction> _paymentHistoryRepo;
         private readonly IRepository<Wallet> _walletRepo;
         private readonly IUserService _userService;
 
-        public WithdrawRequestService(IUserService userService, IRepository<WithdrawRequest> withdrawRepo, IRepository<Wallet> walletRepo, IRepository<PaymentHistory> paymentHistoryRepo)
+        public WithdrawRequestService(IUserService userService, IRepository<WithdrawRequest> withdrawRepo, IRepository<Wallet> walletRepo, IRepository<Transaction> paymentHistoryRepo)
         {
             _withdrawRepo = withdrawRepo;
             _paymentHistoryRepo = paymentHistoryRepo;
@@ -105,7 +105,7 @@ namespace BEAPI.Services
             request.Status = WithdrawStatus.Approved;
             wallet.Amount -= request.Amount;
 
-            var payment = new PaymentHistory
+            var payment = new Transaction
             {
                 UserId = request.UserId,
                 Amount = request.Amount,

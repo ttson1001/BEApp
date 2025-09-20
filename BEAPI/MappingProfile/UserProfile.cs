@@ -71,7 +71,7 @@ namespace BEAPI.MappingProfile
                 .ForMember(d => d.RoleName, o => o.MapFrom(s => s.Role != null ? s.Role.Name : null))
                 .ForMember(d => d.CategoryValues,
                     opt => opt.MapFrom(u => u.UserCategories.Select(uc => uc.Value)))
-                .ForMember(d => d.PaymentCount, o => o.MapFrom(s => s.PaymentHistory.Count))
+                .ForMember(d => d.PaymentCount, o => o.MapFrom(s => s.Transactions.Count))
                 .ForMember(d => d.CartCount, o => o.MapFrom(s => s.Carts.Count))
                 .ForMember(d => d.UserPromotions, o => o.Ignore())
                 .ForMember(d => d.Addresses, o => o.Ignore());

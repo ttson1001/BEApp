@@ -10,10 +10,10 @@ namespace BEAPI.Services
 {
     public class PaymentHistoryService : IPaymentHistoryService
     {
-        private readonly IRepository<PaymentHistory> _repo;
+        private readonly IRepository<Transaction> _repo;
         private readonly IMapper _mapper;
 
-        public PaymentHistoryService(IRepository<PaymentHistory> repo, IMapper mapper)
+        public PaymentHistoryService(IRepository<Transaction> repo, IMapper mapper)
         {
             _repo = repo;
             _mapper = mapper;
@@ -72,7 +72,7 @@ namespace BEAPI.Services
 
         public async Task<List<PaymentHistoryDto>> GetPaymentHistoriesAsync(DateRangeDto dto, CancellationToken ct)
         {
-            IQueryable<PaymentHistory> query = _repo.Get()
+            IQueryable<Transaction> query = _repo.Get()
                 .Where(p => p.UserId == dto.UserId)
                 .Include(p => p.User)
                 .Include(p => p.Order);
