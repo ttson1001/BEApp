@@ -1,17 +1,22 @@
-﻿using BEAPI.Model;
+﻿using BEAPI.Entities;
+using BEAPI.Model;
+using BEAPI.Repositories;
 using BEAPI.Services.IServices;
 using MailKit.Net.Smtp;
 using MailKit.Security;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
 public class EmailService : IEmailService
 {
     private readonly EmailSettings _settings;
+    private readonly IRepository<User> _userRepository;
 
-    public EmailService(IOptions<EmailSettings> settings)
+    public EmailService(IOptions<EmailSettings> settings, IRepository<User> userRepository)
     {
         _settings = settings.Value;
+        _userRepository = userRepository;
     }
 
     public async Task SendOtpAsync(string toEmail, string otp)

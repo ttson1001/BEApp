@@ -41,6 +41,7 @@ namespace BEAPI.Extension
             services.AddScoped<IUserConnectionService, UserConnectionService>();
             services.AddScoped<IWithdrawRequestService, WithdrawRequestService>();
             services.AddScoped<IReviewService, ReviewService>(); 
+            services.AddScoped<IAppDbSettingsService, AppDbSettingsService>();
         }
     }
 }
