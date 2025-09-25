@@ -28,11 +28,15 @@ namespace BEAPI.Services
 
         public async Task RegisterAsync(RegisterDto registerDto)
         {
+            if (!IsValidPassword(registerDto.Password))
+                throw new Exception("Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character.");
+
             var existingUser = await _userRepo.Get()
-                    .Where(u =>
-                              u.Email == registerDto.Email
-                             || u.PhoneNumber == registerDto.PhoneNumber)
-                    .FirstOrDefaultAsync();
+                .Where(u =>
+                    u.Email == registerDto.Email
+                    || u.PhoneNumber == registerDto.PhoneNumber)
+                .FirstOrDefaultAsync();
+
             if (existingUser != null)
             {
                 if (existingUser.Email == registerDto.Email)
@@ -41,8 +45,10 @@ namespace BEAPI.Services
                 if (existingUser.PhoneNumber == registerDto.PhoneNumber)
                     throw new Exception(ExceptionConstant.PhoneNumberAlreadyExists);
             }
+
             var user = _mapper.Map<User>(registerDto);
             user.UserName = registerDto.Email;
+
             await _userRepo.AddAsync(user);
             await _userRepo.SaveChangesAsync();
 
@@ -50,6 +56,20 @@ namespace BEAPI.Services
             await _walletRepo.AddAsync(wallet);
             await _walletRepo.SaveChangesAsync();
         }
+
+        private bool IsValidPassword(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+                return false;
+
+            bool hasUpper = password.Any(char.IsUpper);
+            bool hasLower = password.Any(char.IsLower);
+            bool hasDigit = password.Any(char.IsDigit);
+            bool hasSpecial = password.Any(ch => !char.IsLetterOrDigit(ch));
+
+            return hasUpper && hasLower && hasDigit && hasSpecial;
+        }
+
 
         public async Task<User> FindUserByEmailOrPhoneAsync(string emailOrPhone)
         {
