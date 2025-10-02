@@ -35,6 +35,7 @@ namespace BEAPI.Services
             IRepository<District> districtRepo,
             IRepository<Ward> warRepo,
             IRepository<Province> provineRepo,
+            IRepository<AppDbSettings> appDbSettingRepo,
             IRepository<Wallet> walletRepo,
             IRepository<User> userRepo,
             IMapper mapper,
@@ -48,6 +49,7 @@ namespace BEAPI.Services
             _warRepo = warRepo;
             _provineRepo = provineRepo;
             _walletRepo = walletRepo;
+            _appDbSettingRepo = appDbSettingRepo;
         }
 
         public async Task CreateElder(ElderRegisterDto elderRegisterDto, Guid userId)
