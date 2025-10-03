@@ -164,7 +164,8 @@ namespace BEAPI.Services
                 .Include(x => x.Items)
                     .ThenInclude(x => x.ProductVariant)
                         .ThenInclude(x => x.Product)
-                .FirstOrDefaultAsync(u => u.Id == id && u.Status == CartStatus.Pending)
+                .Where(u => u.Id == id && (u.ElderId == null || u.Status == CartStatus.Pending))
+                .FirstOrDefaultAsync()
                 ?? throw new Exception("Cart not found or not in pending status");
         }
 
