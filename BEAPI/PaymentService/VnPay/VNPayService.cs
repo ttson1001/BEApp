@@ -138,15 +138,16 @@ namespace BEAPI.PaymentService.VnPay
         private async Task<Cart> ValidateCart(Guid cartId)
         {
             var cart = _repository.Get()
-                .Include(x => x.Items)
-                    .ThenInclude(x => x.ProductVariant)
-                        .ThenInclude(x => x.Product)
-                .FirstOrDefault(u =>
-                    u.Id == cartId &&
-                    (u.ElderId != null ? u.Status == CartStatus.Pending : true)
-                )
-                ?? throw new Exception("Cart not found or not in pending status");
-            if(cart.ElderId != null)
+    .Include(x => x.Items)
+        .ThenInclude(x => x.ProductVariant)
+            .ThenInclude(x => x.Product)
+    .Where(u =>
+        u.Id == cartId &&
+        (u.ElderId == null || u.Status == CartStatus.Pending)
+    ).FirstOrDefault()
+    ?? throw new Exception("Cart not found or not in pending status");
+
+            if (cart.ElderId != null)
             {
                 await _userService.SendNotificationToUserAsync((Guid)cart.ElderId, "Silver Cart", "Giỏi hàng của bạn đã được chấp nhận");
             }
