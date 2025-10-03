@@ -248,6 +248,7 @@ namespace BEAPI.Services
             var orders = await _orderRepo.Get()
                 .Where(o => o.CustomerId == customerId)
                 .Include(o => o.OrderDetails)
+                .Include(o => o.Transactions)
                 .ToListAsync();
 
             return _mapper.Map<List<OrderDto>>(orders);
@@ -281,6 +282,7 @@ namespace BEAPI.Services
                           .ThenInclude(pv => pv.ProductVariantValues)
                               .ThenInclude(pvv => pvv.Value)
                   .Include(o => o.Elder)
+                  .Include(o => o.Transactions)
                   .Include(o => o.Customer)
                   .FirstOrDefaultAsync(o => o.Id == id);
 
@@ -303,6 +305,7 @@ namespace BEAPI.Services
                 ShippingCode = order.ShippingCode,
                 ExpectedDeliveryTime = order.ExpectedDeliveryTime,
                 CustomerName = order.Customer?.FullName ?? string.Empty,
+                PaymentMethod = order.Transactions.FirstOrDefault()?.PaymentMenthod,
                 CreationDate = order.CreationDate,
                 ElderName = order.Elder?.FullName ?? string.Empty,
                 OrderDetails = order.OrderDetails.Select(od => new OrderDetailDto

@@ -24,7 +24,7 @@ namespace BEAPI.Entities
         public string PhoneNumber { get; set; } = string.Empty;
 
         public virtual List<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
-
+        public virtual List<Transaction> Transactions { get; set; } = new();
         public List<OrderShipmentEvent> ShipmentEvents { get; set; } = new();
 
         // ====== GHN Shipping fields ======

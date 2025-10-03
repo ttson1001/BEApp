@@ -8,6 +8,10 @@ namespace BEAPI.MappingProfile
     {
         public OrderProfile() {
             CreateMap<Order, OrderDto>()
+               .ForMember(dest => dest.PaymentMethod,
+    opt => opt.MapFrom(src => src.Transactions != null && src.Transactions.Any()
+        ? src.Transactions.FirstOrDefault().PaymentMenthod
+        : null))
                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.Customer.FullName))
                .ForMember(dest => dest.ElderName, opt => opt.MapFrom(src => src.Elder.FullName))
                .ForMember(dest => dest.ShippingFee, opt => opt.MapFrom(src => src.ShippingFee))
