@@ -249,6 +249,8 @@ namespace BEAPI.Services
             var orders = await _orderRepo.Get()
                 .Where(o => o.CustomerId == customerId)
                 .Include(o => o.OrderDetails)
+                .Include(o => o.Elder)
+                .Include(o => o.Customer)
                 .Include(o => o.Transactions)
                 .ToListAsync();
 
@@ -262,6 +264,9 @@ namespace BEAPI.Services
             var orders = await _orderRepo.Get()
                 .Where(o => o.ElderId == elderId)
                 .Include(o => o.OrderDetails)
+                .Include(o => o.Elder)
+                .Include(o => o.Customer)
+                .Include(o => o.Transactions)
                 .ToListAsync();
 
             return _mapper.Map<List<OrderDto>>(orders);
